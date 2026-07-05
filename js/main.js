@@ -826,6 +826,95 @@
         document.addEventListener('cnidaria:setting:anticipation', () => {
             if (jellyfishAnimator) jellyfishAnimator.triggerAnticipation(0.4);
         });
+
+        // v6.0 image settings
+        document.addEventListener('cnidaria:setting:imagescale', e => {
+            if (jellyfish) jellyfish.setScaleMult(e.detail);
+        });
+        document.addEventListener('cnidaria:setting:imageopacity', e => {
+            if (jellyfish) jellyfish.setOpacity(e.detail);
+        });
+        document.addEventListener('cnidaria:setting:imageshadow', e => {
+            if (jellyfish) jellyfish.setShadow(e.detail);
+        });
+
+        // v6.0 remedy personality
+        document.addEventListener('cnidaria:setting:remedychange', e => {
+            if (typeof RemedyPersonality === 'undefined') return;
+            const remedy = new RemedyPersonality(e.detail);
+            if (jellyfishAnimator) remedy.applyToAnimator(jellyfishAnimator);
+            if (jellyfish) remedy.applyToJellyfish(jellyfish);
+            if (limbicBridge) {
+                limbicBridge.setTargetParams(remedy.getLimbicTarget());
+            }
+            showToast(`Remedy: ${remedy.getProfile().name}`, 'success');
+        });
+
+        // v6.0 session timer
+        document.addEventListener('cnidaria:setting:sessionstart', e => {
+            const { name, minutes, breathPattern } = e.detail || {};
+            showToast(`Session started: ${name || 'Guided'} (${minutes} min, ${breathPattern})`, 'success');
+            SystemAPIs.haptic('light');
+        });
+        document.addEventListener('cnidaria:setting:sessionend', () => {
+            showToast('Session complete. Well done.', 'success');
+            SystemAPIs.haptic('heavy');
+        });
+        document.addEventListener('cnidaria:setting:sessionstop', () => {
+            showToast('Session stopped', 'default');
+        });
+
+        // v6.0 thought bubble
+        document.addEventListener('cnidaria:setting:thoughtbubble', e => {
+            const text = e.detail;
+            if (jellyfish && text) {
+                showFloatingText(text, jellyfish.x, jellyfish.y - 60);
+            }
+        });
+
+        // v6.0 limbic bridge UI updates
+        if (limbicBridge) {
+            limbicBridge.onUpdate(params => {
+                // Update visual bars in settings panel
+                const panel = document.querySelector('.cnidaria-settings-panel');
+                if (!panel) return;
+                const updateBar = (id, val, pct) => {
+                    const el = panel.querySelector(id);
+                    if (el) el.style.width = pct + '%';
+                    const valEl = panel.querySelector(id + '-val');
+                    if (valEl) valEl.textContent = val.toFixed(2);
+                };
+                updateBar('#limbic-arousal-bar', params.arousal, params.arousal * 100);
+                updateBar('#limbic-valence-bar', params.valence, params.valence * 100);
+                updateBar('#limbic-dominance-bar', params.dominance, params.dominance * 100);
+                const stateEl = panel.querySelector('#limbic-state');
+                if (stateEl) stateEl.textContent = 'State: ' + limbicBridge.getEmotionalState();
+            });
+        }
+    }
+
+    // v6.0: floating thought bubble helper
+    function showFloatingText(text, x, y) {
+        const el = document.createElement('div');
+        el.textContent = text;
+        el.style.cssText = `
+            position:fixed;left:${x}px;top:${y}px;
+            background:rgba(0,0,0,0.7);color:#c8e6ff;
+            padding:8px 14px;border-radius:12px;border:1px solid rgba(106,184,255,0.3);
+            font-size:13px;z-index:70;pointer-events:none;opacity:0;
+            transform:translate(-50%,0);max-width:200px;text-align:center;
+            transition:opacity 0.5s, transform 0.5s;
+        `;
+        document.body.appendChild(el);
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translate(-50%, -10px)';
+        });
+        setTimeout(() => {
+            el.style.opacity = '0';
+            el.style.transform = 'translate(-50%, -30px)';
+            setTimeout(() => el.remove(), 500);
+        }, 3000);
     }
 
     // ─── State change effects ───

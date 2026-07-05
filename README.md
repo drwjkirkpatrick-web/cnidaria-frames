@@ -43,8 +43,22 @@ python3 ws_server.py
 | `w` | Toggle storm mode |
 | `p` | Trigger plankton bloom |
 
-## Features (v5.0)
+## Features (v6.0)
 
+- **Thought Bubble** — type what the jellyfish is thinking; floating text appears above
+  with fade-in, gentle rise, and auto-dismiss after 3 seconds
+- **Remedy Personality Picker** — 12 homeopathic remedies (Pulsatilla, Bryonia, Arsenicum,
+  Natrum Muriaticum, Sulphur, Sepia, Nux Vomica, Lachesis, Phosphorus, Silica,
+  Calcarea Carbonica, Causticum) each with unique animation profiles, colors, timing,
+  and limbic targets
+- **Guided Session Timer** — remedy-specific meditation timers (4–15 min) with
+  breath-pattern labels (e.g. 4-7-8, 3-3-3, 5-0-5), start/stop/complete UI
+- **Enhanced Hermes Limbic Bridge** — real-time arousal/valence/dominance bars with
+  emotional state labels (Calm, Excited, Anxious, Confident, etc.);
+  remedy selection smoothly interpolates limbic targets
+- **Image Scale slider** — 0.3× to 2.0× fine-grained size control
+- **Image Opacity slider** — ghostly translucent to fully opaque
+- **Cast Shadow toggle** — soft ellipse shadow beneath jellyfish for grounded depth
 - **12 Principles of Animation** implemented for still-frame jellyfish:
   - **Squash & Stretch** — bell compresses/expands with volume conservation (W×H constant)
   - **Anticipation** — brief shrink before major movements (triggerable in settings)
@@ -58,7 +72,6 @@ python3 ws_server.py
   - **Solid Drawing** — volume conservation during squash, sliced tentacle rendering
   - **Appeal** — micro-expressions (blink, tentacle twitch) for subtle performance
 - **Scene pacing / mood cycles** — auto-cycles through calm→curious→majestic→drifting
-  every 15 seconds, switching personality automatically
 - **Procedurally animated jellyfish** from a single still frame — vertical slice-warping
 - **Full-viewport background** — DOF gradient extends beyond corners
 - **17 AI image models** via Nous Research / FAL.ai (FLUX, Ideogram, Recraft, SDXL, etc.)
@@ -70,19 +83,19 @@ python3 ws_server.py
 - **Export analytics** as JSON download
 - **Keyboard help overlay** (`?`)
 - **Auto-dark mode** by time of day
-- **Touch ripple** effect on water surface
-
-### v1.2 Features
-
-- Caustics / underwater god-rays
-- Food pellets / feeding interaction
-- Ocean themes: deep, arctic, reef, abyss
-- Jellyfish personalities: nervous, lazy, curious, leader
-- Predator silhouette pass-by with panic scatter
-- Ink cloud burst on error state
-- Voice commands via Web Speech API
-- Fullscreen API + Wake Lock
-- Battery-aware performance throttling
+- **WebSocket sync** for multi-device sessions
+- **Seafloor terrain** with parallax scrolling
+- **Manta ray companion** with schooling behavior
+- **Touch-drag steering** of the jellyfish
+- **Plankton bloom** events (dense drifting clouds)
+- **Storm mode** with lightning flashes and procedural thunder
+- **Color-blind accessible** theme variants
+- **Achievement/badge system** with localStorage persistence
+- **Voice commands** ("generate", "theme", "screenshot")
+- **Breathing guide** overlay for meditation
+- **Audio-reactive** mic input drives particle intensity
+- **Lifecycle simulation** (egg → polyp → ephyra → medusa)
+- **URL state** sharing (theme, personality, etc. encoded in hash)
 - Haptic feedback on transitions
 - Screenshot export
 - ARIA screen reader support
@@ -140,7 +153,8 @@ cnidaria-frames/
 └── js/
     ├── main.js             # v5.0 orchestrator (professional animation + generator)
     ├── jellyfish.js        # v5.0: single image-based jellyfish with animator integration
-    ├── jellyfish-animator.js  # v5.0: 12 Principles of Animation engine (spring physics, arcs, squash, micro-expressions)
+    ├── jellyfish-animator.js  # v5.0: 12 Principles of Animation engine
+    ├── remedy-personality.js  # v6.0: 12 homeopathic remedy profiles with animation + limbic targets
     ├── jellyfish-image-generator.js  # Prompt builder + variation logic + localStorage save + gallery
     ├── particles.js        # Bubbles + sparkles
     ├── gesture-handler.js  # Touch + keyboard

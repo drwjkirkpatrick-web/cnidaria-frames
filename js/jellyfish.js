@@ -58,6 +58,11 @@
             // Color override (from deluxe color selector)
             this.colorOverride = null; // { h, s, l }
 
+            // v6.0 image settings
+            this.opacity = 1.0;
+            this.shadowEnabled = false;
+            this.scaleMult = 1.0;
+
             // Bounds (set externally)
             this.minX = 0;
             this.minY = 0;
@@ -112,6 +117,10 @@
         setColorOverride(h, s, l) {
             this.colorOverride = { h, s, l };
         }
+
+        setOpacity(val) { this.opacity = Math.max(0.1, Math.min(1, val)); }
+        setShadow(enabled) { this.shadowEnabled = enabled; }
+        setScaleMult(val) { this.scaleMult = Math.max(0.3, Math.min(2, val)); }
 
         clearColorOverride() {
             this.colorOverride = null;
@@ -221,12 +230,25 @@
                 ctx.stroke();
             }
 
+            // ─── Shadow beneath jellyfish ───
+            if (this.shadowEnabled) {
+                ctx.save();
+                ctx.globalAlpha = 0.15;
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.ellipse(0, drawH * 0.45, drawW * 0.4, drawW * 0.08, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.restore();
+            }
+
             ctx.restore();
 
-            // ─── Secondary particles (drawn in world space) ───
+            // ─── Opacity applied in world space after restore ───
+            ctx.globalAlpha = this.opacity || 1.0;
             if (this.particles) {
                 for (const p of this.particles) {
-                    const alpha = Math.max(0, p.life / p.maxLife) * 0.3;
+                    const alpha = Math.max(0, p.life / p.maxLife) * 0.3 * (this.opacity || 1.0);
                     ctx.globalAlpha = alpha;
                     ctx.fillStyle = '#aaddff';
                     ctx.beginPath();

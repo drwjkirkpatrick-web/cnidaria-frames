@@ -36,6 +36,11 @@
                 personality: 'majestic',
                 timing: 'normal',
                 pacingEnabled: true,
+                imageScale: 1.0,
+                imageOpacity: 1.0,
+                imageShadow: false,
+                remedy: 'pulsatilla',
+                thoughtText: '',
             };
             this._load();
             this._buildDOM();
@@ -238,6 +243,106 @@
                                     background:rgba(106,184,255,0.1);
                                     color:#6ab8ff;font-size:11px;cursor:pointer;margin-top:6px;
                                 ">Trigger Anticipation</button>
+                            </div>
+                            <!-- Image Settings -->
+                            <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
+                                <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">IMAGE SETTINGS</div>
+                                <label class="cnidaria-setting-row">
+                                    <span>Scale</span>
+                                    <input type="range" id="setting-scale" min="0.3" max="2.0" step="0.05" value="${this.settings.imageScale || 1.0}" style="width:90px;">
+                                    <span id="setting-scale-val" style="font-size:11px;color:rgba(200,230,255,0.5);width:28px;text-align:right;">${this.settings.imageScale || 1.0}</span>
+                                </label>
+                                <label class="cnidaria-setting-row">
+                                    <span>Opacity</span>
+                                    <input type="range" id="setting-opacity" min="0.1" max="1.0" step="0.05" value="${this.settings.imageOpacity || 1.0}" style="width:90px;">
+                                    <span id="setting-opacity-val" style="font-size:11px;color:rgba(200,230,255,0.5);width:28px;text-align:right;">${this.settings.imageOpacity || 1.0}</span>
+                                </label>
+                                <label class="cnidaria-setting-row cnidaria-toggle">
+                                    <span>Cast Shadow</span>
+                                    <input type="checkbox" id="setting-shadow" ${this.settings.imageShadow ? 'checked' : ''}>
+                                    <span class="cnidaria-toggle-knob"></span>
+                                </label>
+                            </div>
+                            <!-- Remedy Personality Picker -->
+                            <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
+                                <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">REMEDY PERSONALITY</div>
+                                <label class="cnidaria-setting-row">
+                                    <span>Remedy</span>
+                                    <select id="setting-remedy">
+                                        <option value="pulsatilla" ${this.settings.remedy==='pulsatilla'?'selected':''}>Pulsatilla — Gentle · Comfort-seeking</option>
+                                        <option value="bryonia" ${this.settings.remedy==='bryonia'?'selected':''}>Bryonia — Still · Anchored</option>
+                                        <option value="arsenicum" ${this.settings.remedy==='arsenicum'?'selected':''}>Arsenicum — Restless · Precise</option>
+                                        <option value="natrum-muriaticum" ${this.settings.remedy==='natrum-muriaticum'?'selected':''}>Natrum Muriaticum — Contained · Deep</option>
+                                        <option value="sulphur" ${this.settings.remedy==='sulphur'?'selected':''}>Sulphur — Warm · Philosophical</option>
+                                        <option value="sepia" ${this.settings.remedy==='sepia'?'selected':''}>Sepia — Detached · Fluid</option>
+                                        <option value="nux-vomica" ${this.settings.remedy==='nux-vomica'?'selected':''}>Nux Vomica — Driven · Tense</option>
+                                        <option value="lachesis" ${this.settings.remedy==='lachesis'?'selected':''}>Lachesis — Intense · Overflowing</option>
+                                        <option value="phosphorus" ${this.settings.remedy==='phosphorus'?'selected':''}>Phosphorus — Luminous · Curious</option>
+                                        <option value="silica" ${this.settings.remedy==='silica'?'selected':''}>Silica — Delicate · Structured</option>
+                                        <option value="calcarea-carbonica" ${this.settings.remedy==='calcarea-carbonica'?'selected':''}>Calcarea Carbonica — Grounded · Nurturing</option>
+                                        <option value="causticum" ${this.settings.remedy==='causticum'?'selected':''}>Causticum — Sensitive · Empathic</option>
+                                    </select>
+                                </label>
+                                <div id="remedy-desc" style="font-size:11px;color:rgba(200,230,255,0.4);margin-top:4px;line-height:1.4;">${this._getRemedyDesc(this.settings.remedy)}</div>
+                                <div style="display:flex;gap:8px;margin-top:8px;">
+                                    <button id="setting-session-start" style="
+                                        flex:1;padding:6px 12px;border-radius:6px;
+                                        border:1px solid rgba(106,184,255,0.3);
+                                        background:rgba(106,184,255,0.1);
+                                        color:#6ab8ff;font-size:11px;cursor:pointer;
+                                    ">▶ Start Session</button>
+                                    <button id="setting-session-stop" style="
+                                        flex:1;padding:6px 12px;border-radius:6px;
+                                        border:1px solid rgba(255,100,100,0.3);
+                                        background:rgba(255,100,100,0.1);
+                                        color:#ff8888;font-size:11px;cursor:pointer;display:none;
+                                    ">⏹ Stop</button>
+                                </div>
+                                <div id="session-timer" style="font-size:13px;color:#6ab8ff;text-align:center;margin-top:6px;display:none;">00:00</div>
+                            </div>
+                            <!-- Hermes Limbic Bridge -->
+                            <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
+                                <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">HERMES LIMBIC BRIDGE</div>
+                                <div id="limbic-state" style="font-size:11px;color:#6ab8ff;margin-bottom:6px;">State: —</div>
+                                <div style="margin-bottom:6px;">
+                                    <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(200,230,255,0.4);">
+                                        <span>Arousal</span><span id="limbic-arousal-val">0.50</span>
+                                    </div>
+                                    <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:2px;">
+                                        <div id="limbic-arousal-bar" style="height:100%;width:50%;background:linear-gradient(90deg,#6ab8ff,#aaddff);border-radius:2px;transition:width 0.3s;"></div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom:6px;">
+                                    <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(200,230,255,0.4);">
+                                        <span>Valence</span><span id="limbic-valence-val">0.50</span>
+                                    </div>
+                                    <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:2px;">
+                                        <div id="limbic-valence-bar" style="height:100%;width:50%;background:linear-gradient(90deg,#88ff88,#aaddaa);border-radius:2px;transition:width 0.3s;"></div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom:6px;">
+                                    <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(200,230,255,0.4);">
+                                        <span>Dominance</span><span id="limbic-dominance-val">0.50</span>
+                                    </div>
+                                    <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:2px;">
+                                        <div id="limbic-dominance-bar" style="height:100%;width:50%;background:linear-gradient(90deg,#ffaa66,#ffcc88);border-radius:2px;transition:width 0.3s;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Thought Bubble -->
+                            <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
+                                <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">THOUGHT BUBBLE</div>
+                                <textarea id="setting-thought" placeholder="What is the jellyfish thinking?" style="
+                                    width:100%;min-height:48px;background:rgba(0,0,0,0.3);
+                                    border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+                                    color:#c8e6ff;font-size:12px;padding:8px;resize:vertical;
+                                ">${this.settings.thoughtText || ''}</textarea>
+                                <button id="setting-thought-send" style="
+                                    margin-top:6px;padding:4px 12px;border-radius:6px;
+                                    border:1px solid rgba(106,184,255,0.3);
+                                    background:rgba(106,184,255,0.1);
+                                    color:#6ab8ff;font-size:11px;cursor:pointer;
+                                ">💭 Send Thought</button>
                             </div>
                             <!-- Saved Gallery -->
                             <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
@@ -487,6 +592,111 @@
                 });
             }
 
+            // ─── v6.0 Image Settings wiring ───
+            const scaleInput = this.dom.panel.querySelector('#setting-scale');
+            const scaleVal = this.dom.panel.querySelector('#setting-scale-val');
+            if (scaleInput) {
+                scaleInput.addEventListener('input', e => {
+                    this.settings.imageScale = parseFloat(e.target.value);
+                    if (scaleVal) scaleVal.textContent = this.settings.imageScale.toFixed(2);
+                    this._emit('imagescale', this.settings.imageScale);
+                    this._save();
+                });
+            }
+            const opacityInput = this.dom.panel.querySelector('#setting-opacity');
+            const opacityVal = this.dom.panel.querySelector('#setting-opacity-val');
+            if (opacityInput) {
+                opacityInput.addEventListener('input', e => {
+                    this.settings.imageOpacity = parseFloat(e.target.value);
+                    if (opacityVal) opacityVal.textContent = this.settings.imageOpacity.toFixed(2);
+                    this._emit('imageopacity', this.settings.imageOpacity);
+                    this._save();
+                });
+            }
+            const shadowCb = this.dom.panel.querySelector('#setting-shadow');
+            if (shadowCb) {
+                shadowCb.addEventListener('change', e => {
+                    this.settings.imageShadow = e.target.checked;
+                    this._emit('imageshadow', e.target.checked);
+                    this._save();
+                });
+            }
+
+            // ─── v6.0 Remedy Personality wiring ───
+            const remedySelect = this.dom.panel.querySelector('#setting-remedy');
+            const remedyDesc = this.dom.panel.querySelector('#remedy-desc');
+            if (remedySelect) {
+                remedySelect.addEventListener('change', e => {
+                    this.settings.remedy = e.target.value;
+                    if (remedyDesc && typeof RemedyPersonality !== 'undefined') {
+                        const p = RemedyPersonality.getProfile(e.target.value);
+                        remedyDesc.textContent = p ? p.desc : '';
+                    }
+                    this._emit('remedychange', e.target.value);
+                    this._save();
+                });
+            }
+
+            // Session timer
+            const sessionStartBtn = this.dom.panel.querySelector('#setting-session-start');
+            const sessionStopBtn = this.dom.panel.querySelector('#setting-session-stop');
+            const sessionTimerEl = this.dom.panel.querySelector('#session-timer');
+            let sessionInterval = null;
+            let sessionSeconds = 0;
+
+            function updateTimerDisplay() {
+                const m = Math.floor(sessionSeconds / 60).toString().padStart(2, '0');
+                const s = (sessionSeconds % 60).toString().padStart(2, '0');
+                if (sessionTimerEl) sessionTimerEl.textContent = `${m}:${s}`;
+            }
+
+            if (sessionStartBtn) {
+                sessionStartBtn.addEventListener('click', () => {
+                    const config = (typeof RemedyPersonality !== 'undefined') ?
+                        new RemedyPersonality(this.settings.remedy).getSessionConfig() :
+                        { minutes: 10 };
+                    sessionSeconds = config.minutes * 60;
+                    updateTimerDisplay();
+                    if (sessionTimerEl) sessionTimerEl.style.display = 'block';
+                    if (sessionStartBtn) sessionStartBtn.style.display = 'none';
+                    if (sessionStopBtn) sessionStopBtn.style.display = 'block';
+                    this._emit('sessionstart', config);
+                    sessionInterval = setInterval(() => {
+                        sessionSeconds--;
+                        updateTimerDisplay();
+                        if (sessionSeconds <= 0) {
+                            clearInterval(sessionInterval);
+                            if (sessionStartBtn) sessionStartBtn.style.display = 'block';
+                            if (sessionStopBtn) sessionStopBtn.style.display = 'none';
+                            if (sessionTimerEl) sessionTimerEl.style.display = 'none';
+                            this._emit('sessionend', {});
+                        }
+                    }, 1000);
+                });
+            }
+            if (sessionStopBtn) {
+                sessionStopBtn.addEventListener('click', () => {
+                    clearInterval(sessionInterval);
+                    if (sessionStartBtn) sessionStartBtn.style.display = 'block';
+                    if (sessionStopBtn) sessionStopBtn.style.display = 'none';
+                    if (sessionTimerEl) sessionTimerEl.style.display = 'none';
+                    this._emit('sessionstop', {});
+                });
+            }
+
+            // ─── v6.0 Thought Bubble wiring ───
+            const thoughtSendBtn = this.dom.panel.querySelector('#setting-thought-send');
+            const thoughtInput = this.dom.panel.querySelector('#setting-thought');
+            if (thoughtSendBtn) {
+                thoughtSendBtn.addEventListener('click', () => {
+                    const text = thoughtInput ? thoughtInput.value.trim() : '';
+                    if (text) {
+                        this._emit('thoughtbubble', text);
+                        if (thoughtInput) thoughtInput.value = '';
+                    }
+                });
+            }
+
             // Voice toggle
             const voiceCb = this.dom.panel.querySelector('#setting-voice');
             if (voiceCb) {
@@ -587,6 +797,12 @@
 
         getSettings() {
             return { ...this.settings };
+        }
+
+        _getRemedyDesc(key) {
+            if (typeof RemedyPersonality === 'undefined') return '';
+            const p = RemedyPersonality.getProfile(key || 'pulsatilla');
+            return p ? p.desc : '';
         }
 
         _emit(type, value) {
