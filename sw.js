@@ -1,10 +1,10 @@
 /**
- * sw.js - Service Worker for Cnidaria Frames
+ * sw.js - Service Worker for Cnidaria Frames v1.1
  *
- * Provides basic caching for offline access.
+ * Provides caching for offline access. Cache-bust on version bump.
  */
 
-const CACHE_NAME = 'cnidaria-frames-v1';
+const CACHE_NAME = 'cnidaria-frames-v1-1';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -12,9 +12,18 @@ const urlsToCache = [
   '/js/utils.js',
   '/js/state-manager.js',
   '/js/limbic-bridge.js',
+  '/js/particles.js',
+  '/js/gesture-handler.js',
+  '/js/audio-engine.js',
+  '/js/settings-panel.js',
+  '/js/performance-monitor.js',
+  '/js/screensaver.js',
   '/js/jellyfish.js',
   '/js/main.js',
-  '/manifest.json'
+  '/manifest.json',
+  '/assets/icon-192.png',
+  '/assets/icon-512.png',
+  '/assets/apple-touch-icon.png'
 ];
 
 // Install event - cache files
@@ -22,57 +31,54 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
+        console.log('[SW] Opened cache', CACHE_NAME);
         return cache.addAll(urlsToCache);
+      })
+      .catch(err => console.warn('[SW] Cache install failed:', err))
+  );
+  self.skipWaiting();
+});
+
+// Fetch event - stale-while-revalidate strategy
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(cachedResponse => {
+        // Fetch from network in parallel
+        const fetchPromise = fetch(event.request)
+          .then(networkResponse => {
+            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+              return networkResponse;
+            }
+            // Update cache with fresh response
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+            return networkResponse;
+          })
+          .catch(() => {
+            // Network failed — we already have cachedResponse or nothing
+          });
+
+        // Return cached immediately if available, else wait for network
+        return cachedResponse || fetchPromise;
       })
   );
 });
 
-// Fetch event - serve from cache or network
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached response if found
-        if (response) {
-          return response;
-        }
-        
-        // Otherwise fetch from network
-        return fetch(event.request).then(response => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          
-          // Clone the response for caching
-          const responseToCache = response.clone();
-          
-          // Cache the response
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-            
-          return response;
-        });
-      })
-    );
-});
-
-// Activate event - clean up old caches
+// Activate event - clean up old caches and claim clients
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
-  
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
