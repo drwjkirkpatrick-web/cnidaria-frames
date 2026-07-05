@@ -9,6 +9,9 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/css/jellyfish.css',
+  '/js/utils.js',
+  '/js/state-manager.js',
+  '/js/limbic-bridge.js',
   '/js/jellyfish.js',
   '/js/main.js',
   '/manifest.json'

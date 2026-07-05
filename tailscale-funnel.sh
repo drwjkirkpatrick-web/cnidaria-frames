@@ -18,10 +18,10 @@ fi
 # Check if Funnel is enabled
 if ! tailscale funnel status &>/dev/null; then
     echo "Enabling Tailscale Funnel..."
-    sudo tailscale funnel 8000 on
+    sudo tailscale funnel 9191 on
 fi
 
-echo "Tailscale Funnel is now enabled for port 8000"
+echo "Tailscale Funnel is now enabled for port 9191"
 echo "Start the server with: ./server.py"
 echo "Access via: https://[your-tailscale-name].tailnet-funnel.ts.net"
 
