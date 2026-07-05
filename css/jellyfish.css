@@ -1,0 +1,114 @@
+/**
+ * jellyfish.css — Cnidaria Frames Styles
+ *
+ * Designed for mobile devices:
+ *   - iPhone: 375×667 (iPhone 8) to 430×932 (iPhone 14 Pro Max)
+ *   - iPad: 768×1024 (portrait) to 1024×768 (landscape)
+ *   - Small desktop windows
+ */
+
+/* ─── Base Reset ─── */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000a1a; /* Deep ocean blue */
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Canvas — always fills viewport ─── */
+#jellyfishCanvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    image-rendering: auto;
+}
+
+/* ─── Status Indicator ─── */
+#statusIndicator {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #e0f7ff;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 10;
+    transition: opacity 0.3s;
+}
+
+#statusIndicator.hidden {
+    opacity: 0;
+}
+
+/* ─── Mode Toggle Button ─── */
+#modeToggle {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.3);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.1s;
+}
+
+#modeToggle:hover {
+    background: rgba(0,0,0,0.6);
+    transform: scale(1.1);
+}
+
+#modeToggle:active {
+    transform: scale(0.95);
+}
+
+/* ─── Responsive adjustments for small screens ─── */
+@media screen and (max-width: 768px) {
+    #statusIndicator {
+        font-size: 10px;
+        padding: 3px 8px;
+        top: 6px;
+        right: 6px;
+    }
+    
+    #modeToggle {
+        width: 36px;
+        height: 36px;
+        bottom: 12px;
+        right: 12px;
+    }
+}
+
+/* ─── Reduced motion support ─── */
+@media (prefers-reduced-motion: reduce) {
+    #modeToggle {
+        transition: none;
+    }
+}
+
+/* ─── Accessibility focus ─── */
+#modeToggle:focus-visible {
+    outline: 2px solid rgba(255,255,255,0.5);
+    outline-offset: 2px;
+}

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="A mesmerizing jellyfish agent for Hermes">
+    <title>Cnidaria Frames</title>
+    <link rel="stylesheet" href="css/jellyfish.css">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cnidaria">
+</head>
+<body>
+    <!--
+      Cnidaria Frames — A Jellyfish Agent
+      A minimalist jellyfish visualization for mobile devices
+    -->
+
+    <!-- Main canvas fills the viewport -->
+    <canvas id="jellyfishCanvas"></canvas>
+
+    <!-- Status indicator -->
+    <div id="statusIndicator" class="hidden" role="status" aria-live="polite">
+        <span id="statusText">idle</span>
+    </div>
+
+    <!-- Simple controls -->
+    <button id="modeToggle" title="Toggle jellyfish mode" aria-label="Toggle jellyfish mode">🔄</button>
+    
+    <!-- Scripts -->
+    <script src="js/jellyfish.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
