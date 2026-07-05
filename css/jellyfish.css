@@ -488,6 +488,40 @@ html, body {
     letter-spacing: 0.05em;
 }
 
+.cnidaria-overlay-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.4);
+    color: #c8e6ff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.cnidaria-overlay-btn:hover {
+    background: rgba(0,0,0,0.6);
+}
+.cnidaria-overlay-btn.primary {
+    background: rgba(106, 184, 255, 0.25);
+    border-color: rgba(106, 184, 255, 0.35);
+}
+.cnidaria-overlay-btn.primary:hover {
+    background: rgba(106, 184, 255, 0.4);
+}
+.cnidaria-overlay-prompt {
+    color: rgba(200, 230, 255, 0.5);
+    font-size: 12px;
+    max-width: 260px;
+    text-align: center;
+    word-break: break-word;
+    line-height: 1.4;
+}
+.cnidaria-overlay-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
 /* ─── Screen Reader Only ─── */
 .sr-only {
     position: absolute;

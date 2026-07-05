@@ -34,6 +34,9 @@
     const imgPreview = document.getElementById('imgPreview');
     const imgPreviewImg = document.getElementById('imgPreviewImg');
     const imgPreviewClose = document.getElementById('imgPreviewClose');
+    const imgPreviewApply = document.getElementById('imgPreviewApply');
+    const imgPreviewCancel = document.getElementById('imgPreviewCancel');
+    const imgPreviewPrompt = document.getElementById('imgPreviewPrompt');
     const imgPreviewStatus = document.getElementById('imgPreviewStatus');
 
     // ─── Components ───
@@ -198,7 +201,7 @@
         });
         if (btnSettings) btnSettings.addEventListener('click', () => settingsPanel.open());
 
-        // Preview overlay close
+        // Preview overlay
         if (imgPreviewClose) {
             imgPreviewClose.addEventListener('click', () => {
                 imgPreview.classList.add('hidden');
@@ -209,9 +212,32 @@
                 if (e.target === imgPreview) imgPreview.classList.add('hidden');
             });
         }
+        if (imgPreviewApply) {
+            imgPreviewApply.addEventListener('click', () => {
+                if (lastGeneratedUrl) applyJellyfishImage(lastGeneratedUrl);
+                imgPreview.classList.add('hidden');
+            });
+        }
+        if (imgPreviewCancel) {
+            imgPreviewCancel.addEventListener('click', () => {
+                imgPreview.classList.add('hidden');
+            });
+        }
 
         // Start animation
-        requestAnimationFrame(animate);
+        animationId = requestAnimationFrame(animate);
+
+        // Pause when tab hidden (save battery)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (animationId) cancelAnimationFrame(animationId);
+                if (audioEngine) audioEngine.stop();
+            } else {
+                lastTime = performance.now();
+                animationId = requestAnimationFrame(animate);
+                if (audioEngine) audioEngine.start();
+            }
+        });
 
         setTimeout(() => splashScreen.classList.add('hidden'), 900);
 
@@ -260,29 +286,25 @@
         imgPreview.classList.remove('hidden');
         imgPreviewStatus.textContent = 'Generating…';
         imgPreviewImg.style.opacity = '0.3';
+        if (imgPreviewPrompt) imgPreviewPrompt.textContent = built.prompt;
 
         try {
-            // In a real app, this would call the FAL API endpoint.
-            // For this local build, we rotate through pre-generated variants
-            // and simulate the generation flow.
             const variantIndex = Math.floor(Math.random() * 8) + 1;
             const src = `assets/jellyfish-variants/jellyfish-${String(variantIndex).padStart(2, '0')}.png`;
 
-            const img = await JellyfishImageGenerator.preloadImage(src);
+            await JellyfishImageGenerator.preloadImage(src);
             lastGeneratedUrl = src;
 
             imgPreviewImg.src = src;
             imgPreviewImg.style.opacity = '1';
-            imgPreviewStatus.textContent = 'Tap Apply to use this jellyfish';
+            imgPreviewStatus.textContent = '';
 
-            // Auto-apply after short delay
-            setTimeout(() => {
-                applyJellyfishImage(src);
-                imgPreview.classList.add('hidden');
-            }, 1500);
+            // Enable Apply button
+            if (imgPreviewApply) imgPreviewApply.disabled = false;
         } catch (err) {
             console.error('Generation failed:', err);
             imgPreviewStatus.textContent = 'Error. Try again.';
+            if (imgPreviewApply) imgPreviewApply.disabled = true;
         }
     }
 
@@ -319,12 +341,37 @@
             })
             .then(entry => {
                 announceToScreenReader('Jellyfish saved');
+                showToast('Jellyfish saved!', 'success');
                 if (achievements) achievements.checkSave();
             })
             .catch(err => {
                 console.error('Save failed:', err);
                 announceToScreenReader('Save failed');
+                showToast('Save failed', 'error');
             });
+    }
+
+    // ─── Toast notification ───
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = 'cnidaria-toast cnidaria-toast--' + type;
+        toast.textContent = message;
+        toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:100;padding:10px 18px;border-radius:8px;font-size:13px;letter-spacing:0.02em;opacity:0;transform:translateY(-10px);transition:opacity 0.3s,transform 0.3s;pointer-events:none;';
+        if (type === 'success') toast.style.background = 'rgba(100,200,150,0.25)';
+        else if (type === 'error') toast.style.background = 'rgba(255,100,100,0.25)';
+        else toast.style.background = 'rgba(106,184,255,0.2)';
+        toast.style.border = '1px solid rgba(255,255,255,0.1)';
+        toast.style.color = '#c8e6ff';
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        });
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
     }
 
     // ─── Canvas sizing ───
@@ -343,8 +390,8 @@
         if (coralReef) coralReef.resize();
         if (mantaRayManager) mantaRayManager.resize(window.innerWidth, window.innerHeight);
         if (jellyfish) {
-            jellyfish.x = window.innerWidth / 2;
-            jellyfish.y = window.innerHeight / 2;
+            jellyfish.targetX = window.innerWidth / 2;
+            jellyfish.targetY = window.innerHeight / 2;
             jellyfish.setBounds(window.innerWidth, window.innerHeight);
         }
     }
@@ -682,6 +729,11 @@
             achievements.checkScreenshot();
         });
         document.addEventListener('cnidaria:voice:fullscreen', () => SystemAPIs.toggleFullscreen());
+
+        // v3.0 image generation keyboard shortcuts
+        document.addEventListener('cnidaria:generatejellyfish', () => generateJellyfishImage());
+        document.addEventListener('cnidaria:varyjellyfish', () => varyJellyfishImage());
+        document.addEventListener('cnidaria:savejellyfish', () => saveCurrentJellyfish());
     }
 
     // ─── Settings listeners ───

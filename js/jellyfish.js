@@ -32,14 +32,18 @@
         constructor(x, y, scale = 1) {
             this.x = x;
             this.y = y;
+            this.targetX = x;
+            this.targetY = y;
             this.scale = scale;
             this.baseScale = scale;
 
             // Image
             this.image = null;
-            this.imageWidth = 512;  // assumed square source
+            this.imageWidth = 512;
             this.imageHeight = 512;
             this.imageLoaded = false;
+            this.imageLoading = false;
+            this.loadError = false;
 
             // Screen bounds (set externally via setBounds)
             this.bounds = { minX: 60, maxX: window.innerWidth - 60, minY: 60, maxY: window.innerHeight - 60 };
@@ -70,12 +74,19 @@
 
         setImage(imgOrUrl) {
             if (typeof imgOrUrl === 'string') {
+                this.imageLoading = true;
+                this.loadError = false;
                 const img = new Image();
                 img.onload = () => {
                     this.image = img;
                     this.imageWidth = img.naturalWidth || 512;
                     this.imageHeight = img.naturalHeight || 512;
                     this.imageLoaded = true;
+                    this.imageLoading = false;
+                };
+                img.onerror = () => {
+                    this.imageLoading = false;
+                    this.loadError = true;
                 };
                 img.src = imgOrUrl;
             } else if (imgOrUrl && imgOrUrl.naturalWidth) {
@@ -83,6 +94,7 @@
                 this.imageWidth = imgOrUrl.naturalWidth;
                 this.imageHeight = imgOrUrl.naturalHeight;
                 this.imageLoaded = true;
+                this.imageLoading = false;
             }
         }
 
@@ -127,6 +139,10 @@
             this.pulsePhase += dt * (rates[this.state] || 1) * motionFactor;
 
             if (!this.isBeingDragged) {
+                // Smooth lerp toward target position (e.g. on resize)
+                this.x += (this.targetX - this.x) * 0.05;
+                this.y += (this.targetY - this.y) * 0.05;
+
                 // Gentle floating
                 const floatAmp = reducedMotion ? 2 : 6;
                 this.y += Math.sin(this.floatPhase) * floatAmp * dt;
@@ -149,9 +165,34 @@
         }
 
         draw(ctx) {
-            if (!this.imageLoaded || !this.image) return;
-
             ctx.save();
+            ctx.translate(this.x, this.y);
+
+            // ─── Loading spinner while image loads ───
+            if (this.imageLoading) {
+                ctx.strokeStyle = 'rgba(200,230,255,0.4)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const r = 16 * this.scale;
+                const angle = performance.now() / 300;
+                ctx.arc(0, 0, r, angle, angle + 1.5);
+                ctx.stroke();
+                ctx.restore();
+                return;
+            }
+
+            // ─── Error state: subtle X ───
+            if (this.loadError || !this.imageLoaded) {
+                ctx.strokeStyle = 'rgba(255,100,100,0.3)';
+                ctx.lineWidth = 2;
+                const r = 12 * this.scale;
+                ctx.beginPath();
+                ctx.moveTo(-r, -r); ctx.lineTo(r, r);
+                ctx.moveTo(r, -r); ctx.lineTo(-r, r);
+                ctx.stroke();
+                ctx.restore();
+                return;
+            }
 
             const pulse = Math.sin(this.pulsePhase) * 0.12 + 1.0;
             const tilt = Math.sin(this.tiltPhase) * 0.05;
@@ -166,18 +207,17 @@
             // ─── Bioluminescent glow behind image ───
             const glowR = Math.max(drawW, drawH) * 0.6;
             const glow = ctx.createRadialGradient(
-                this.x, this.y, glowR * 0.15,
-                this.x, this.y, glowR
+                0, 0, glowR * 0.15,
+                0, 0, glowR
             );
             glow.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, 0.3)`);
             glow.addColorStop(0.5, `rgba(${cr}, ${cg}, ${cb}, 0.08)`);
             glow.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`);
             ctx.globalAlpha = this.alpha;
             ctx.fillStyle = glow;
-            ctx.fillRect(this.x - glowR, this.y - glowR, glowR * 2, glowR * 2);
+            ctx.fillRect(-glowR, -glowR, glowR * 2, glowR * 2);
 
             // ─── Draw image with pulse + tilt ───
-            ctx.translate(this.x, this.y);
             ctx.rotate(tilt);
             ctx.shadowColor = `rgba(${cr}, ${cg}, ${cb}, 0.45)`;
             ctx.shadowBlur = this.glowSize * s;

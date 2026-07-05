@@ -172,6 +172,16 @@
                 case 'v':
                     this._dispatch('togglevoice', {});
                     break;
+                // v3.0 image generation shortcuts
+                case 'g':
+                    this._dispatch('generatejellyfish', {});
+                    break;
+                case 'V':
+                    this._dispatch('varyjellyfish', {});
+                    break;
+                case 'S':
+                    this._dispatch('savejellyfish', {});
+                    break;
             }
         }
 
