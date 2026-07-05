@@ -40,7 +40,7 @@ cnidaria-frames/
 
 1. Clone the repository
 2. Run `python3 server.py` to start the server
-3. Open `http://localhost:8181` in a browser
+3. Open `http://localhost:8282` in a browser
 4. Tap the toggle button to cycle through jellyfish states
 
 ## Technical Details

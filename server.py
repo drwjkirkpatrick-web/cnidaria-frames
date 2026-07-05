@@ -7,7 +7,7 @@ import http.server
 import socketserver
 import os
 
-PORT = 8181  # Using a different port
+PORT = 8282  # Using a different port that should be free
 DIRECTORY = "."
 
 class Handler(http.server.SimpleHTTPRequestHandler):

@@ -11,6 +11,6 @@ fi
 
 # Start the server
 cd "$(dirname "$0")"
-echo "Server starting on http://localhost:8181"
+echo "Server starting on http://localhost:8282"
 echo "Press Ctrl+C to stop the server"
 python3 server.py
