@@ -86,27 +86,39 @@
             const data = this.getHeatmap();
             const stateRows = Object.entries(data.stateCounts)
                 .sort((a, b) => b[1] - a[1])
-                .map(([s, c]) => `&lt;tr&gt;&lt;td style=\"text-transform:capitalize;\"&gt;${s}&lt;/td&gt;&lt;td&gt;${c}&lt;/td&gt;&lt;/tr&gt;`)
+                .map(([s, c]) => `<tr><td style="text-transform:capitalize;">${s}</td><td>${c}</td></tr>`)
                 .join('');
 
             return `
-                &lt;div style=\"margin-top:16px;font-size:12px;color:#aaddff;\"&gt;
-                    &lt;h3 style=\"margin:0 0 8px;font-size:14px;color:#c8e6ff;\"&gt;Session Stats&lt;/h3&gt;
-                    &lt;table style=\"width:100%;border-collapse:collapse;margin-bottom:12px;\"&gt;
-                        &lt;tr&gt;&lt;td style=\"padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);\"&gt;Duration&lt;/td&gt;&lt;td style=\"text-align:right;\"&gt;${Math.floor(data.duration / 60)}m ${data.duration % 60}s&lt;/td&gt;&lt;/tr&gt;
-                        &lt;tr&gt;&lt;td style=\"padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);\"&gt;Active Time&lt;/td&gt;&lt;td style=\"text-align:right;\"&gt;${Math.floor(data.activeTime / 60)}m ${data.activeTime % 60}s&lt;/td&gt;&lt;/tr&gt;
-                        &lt;tr&gt;&lt;td style=\"padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);\"&gt;Interactions&lt;/td&gt;&lt;td style=\"text-align:right;\"&gt;${data.interactions}&lt;/td&gt;&lt;/tr&gt;
-                        &lt;tr&gt;&lt;td style=\"padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);\"&gt;Food Eaten&lt;/td&gt;&lt;td style=\"text-align:right;\"&gt;${data.foodEaten}&lt;/td&gt;&lt;/tr&gt;
-                        &lt;tr&gt;&lt;td style=\"padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);\"&gt;Predators&lt;/td&gt;&lt;td style=\"text-align:right;\"&gt;${data.predatorEncounters}&lt;/td&gt;&lt;/tr&gt;
-                    &lt;/table&gt;
-                    &lt;h4 style=\"margin:0 0 6px;font-size:12px;color:#c8e6ff;\"&gt;State Frequency&lt;/h4&gt;
-                    &lt;table style=\"width:100%;border-collapse:collapse;font-size:11px;\"&gt;
-                        &lt;thead&gt;&lt;tr style=\"color:rgba(200,230,255,0.5);\"&gt;&lt;td style=\"padding:3px 0;\"&gt;State&lt;/td&gt;&lt;td style=\"text-align:right;\"&gt;Count&lt;/td&gt;&lt;/tr&gt;&lt;/thead&gt;
-                        &lt;tbody&gt;${stateRows || '&lt;tr&gt;&lt;td colspan=\"2\" style=\"color:rgba(200,230,255,0.35);\"&gt;No state changes yet&lt;/td&gt;&lt;/tr&gt;'}
-                        &lt;/tbody&gt;
-                    &lt;/table&gt;
-                &lt;/div&gt;
+                <div style="margin-top:16px;font-size:12px;color:#aaddff;">
+                    <h3 style="margin:0 0 8px;font-size:14px;color:#c8e6ff;">Session Stats</h3>
+                    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+                        <tr><td style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">Duration</td><td style="text-align:right;">${Math.floor(data.duration / 60)}m ${data.duration % 60}s</td></tr>
+                        <tr><td style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">Active Time</td><td style="text-align:right;">${Math.floor(data.activeTime / 60)}m ${data.activeTime % 60}s</td></tr>
+                        <tr><td style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">Interactions</td><td style="text-align:right;">${data.interactions}</td></tr>
+                        <tr><td style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">Food Eaten</td><td style="text-align:right;">${data.foodEaten}</td></tr>
+                        <tr><td style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">Predators</td><td style="text-align:right;">${data.predatorEncounters}</td></tr>
+                    </table>
+                    <h4 style="margin:0 0 6px;font-size:12px;color:#c8e6ff;">State Frequency</h4>
+                    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                        <thead><tr style="color:rgba(200,230,255,0.5);"><td style="padding:3px 0;">State</td><td style="text-align:right;">Count</td></tr></thead>
+                        <tbody>${stateRows || '<tr><td colspan="2" style="color:rgba(200,230,255,0.35);">No state changes yet</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
             `;
+        }
+
+        exportJSON() {
+            const data = this.getHeatmap();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cnidaria-analytics-${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
         }
     }
 

@@ -98,10 +98,29 @@
                             <span class="cnidaria-toggle-knob"></span>
                         </label>
                         <label class="cnidaria-setting-row cnidaria-toggle">
-                            <span>Fullscreen</span>
-                            <input type="checkbox" id="setting-fullscreen">
+                            <span>Storm Mode</span>
+                            <input type="checkbox" id="setting-storm">
                             <span class="cnidaria-toggle-knob"></span>
                         </label>
+                        <label class="cnidaria-setting-row cnidaria-toggle">
+                            <span>Breathing Guide</span>
+                            <input type="checkbox" id="setting-breathing">
+                            <span class="cnidaria-toggle-knob"></span>
+                        </label>
+                        <label class="cnidaria-setting-row cnidaria-toggle">
+                            <span>Mic Reactivity</span>
+                            <input type="checkbox" id="setting-mic">
+                            <span class="cnidaria-toggle-knob"></span>
+                        </label>
+                        <div class="cnidaria-setting-row">
+                            <span>Export Analytics</span>
+                            <button id="setting-export" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#c8e6ff;font-size:12px;cursor:pointer;">Download JSON</button>
+                        </div>
+                        <div class="cnidaria-setting-row">
+                            <span>Changelog</span>
+                            <button id="setting-changelog" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#c8e6ff;font-size:12px;cursor:pointer;">View</button>
+                        </div>
+                        <div id="badges-container"></div>
                         <div id="analytics-container"></div>
                     </div>
                     <div class="cnidaria-settings-footer">
@@ -204,9 +223,46 @@
                 });
             }
 
+            // v1.3 settings
+            const stormCb = panel.querySelector('#setting-storm');
+            if (stormCb) {
+                stormCb.addEventListener('change', e => {
+                    this._emit('stormchange', e.target.checked);
+                });
+            }
+            const breathingCb = panel.querySelector('#setting-breathing');
+            if (breathingCb) {
+                breathingCb.addEventListener('change', e => {
+                    this._emit('breathingchange', e.target.checked);
+                });
+            }
+            const micCb = panel.querySelector('#setting-mic');
+            if (micCb) {
+                micCb.addEventListener('change', e => {
+                    this._emit('micchange', e.target.checked);
+                });
+            }
+            const exportBtn = panel.querySelector('#setting-export');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', () => {
+                    this._emit('exportanalytics', {});
+                });
+            }
+            const changelogBtn = panel.querySelector('#setting-changelog');
+            if (changelogBtn) {
+                changelogBtn.addEventListener('click', () => {
+                    this._emit('showchangelog', {});
+                });
+            }
+
             // Analytics rendering hook
             this._renderAnalytics = () => {
                 const container = panel.querySelector('#analytics-container');
+                const badgesContainer = panel.querySelector('#badges-container');
+                if (badgesContainer && window.Achievements) {
+                    const ach = new Achievements();
+                    badgesContainer.innerHTML = ach.renderBadges();
+                }
                 if (!container || !window.Cnidaria || !window.Cnidaria.analytics) return;
                 container.innerHTML = window.Cnidaria.analytics.renderTable();
             };

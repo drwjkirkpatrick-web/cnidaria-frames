@@ -1,9 +1,12 @@
 /**
- * main.js — Cnidaria Frames Main Controller v1.2
+ * main.js — Cnidaria Frames Main Controller v1.3
  *
- * Integrates all subsystems: themes, personalities, food, predators,
- * ink clouds, caustics, voice, system APIs, analytics, lunar phase,
- * WebSocket bridge, and everything from v1.1.
+ * Integrates all subsystems from v1.1 + v1.2 + v1.3:
+ *   v1.1: particles, audio, flocking, gestures, settings, PWA, perf overlay
+ *   v1.2: themes, food, predators, voice, sync, lunar, caustics
+ *   v1.3: seafloor, manta ray, plankton, breathing, storm, achievements,
+ *         audio-reactive, lifecycle, URL state, water current, coral,
+ *         help overlay, changelog, auto-dark, touch ripple, idle behavior
  */
 
 (function() {
@@ -24,23 +27,16 @@
 
     // ─── Components ───
     let jellyfish, jellyfishSwarm = [];
-    let stateManager;
-    let limbicBridge;
-    let particleSystem;
-    let foodSystem;
-    let predatorManager;
-    let inkCloud;
-    let caustics;
-    let gestureHandler;
-    let voiceCommand;
-    let audioEngine;
-    let settingsPanel;
-    let perfMonitor;
-    let screensaver;
-    let themeManager;
-    let analytics;
-    let wsBridge;
-    let lunarPhase;
+    let stateManager, limbicBridge, particleSystem;
+    let foodSystem, predatorManager, inkCloud, caustics;
+    let gestureHandler, voiceCommand, audioEngine;
+    let settingsPanel, perfMonitor, screensaver;
+    let themeManager, analytics, wsBridge, lunarPhase;
+    // v1.3
+    let seafloor, mantaRayManager, planktonBloom, breathingGuide;
+    let storm, achievements, audioReactive, lifecycle;
+    let waterCurrent, coralReef, helpOverlay, changelog;
+    let autoDark, touchRipple, idleBehavior;
 
     // ─── Animation state ───
     let lastTime = 0;
@@ -48,6 +44,7 @@
     let reducedMotion = false;
     let currentTheme = null;
     let previousState = null;
+    let sessionStart = Date.now();
 
     // ─── State history ───
     const stateHistory = [];
@@ -58,7 +55,7 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // Lunar phase (computed once on load)
+        // Lunar phase
         lunarPhase = new LunarPhase();
 
         // Theme system
@@ -76,16 +73,33 @@
         particleSystem = new ParticleSystem();
         particleSystem.init(canvas.width, canvas.height);
 
+        // v1.3 effects
+        seafloor = new Seafloor();
+        coralReef = new CoralReef();
+        touchRipple = new TouchRipple();
+        storm = new Storm();
+        planktonBloom = new PlanktonBloom();
+
         // Food & predators
         foodSystem = new FoodSystem();
         predatorManager = new PredatorManager(canvas.width, canvas.height);
+
+        // Manta ray
+        mantaRayManager = new MantaRayManager(canvas.width, canvas.height);
+
+        // Water current
+        waterCurrent = new WaterCurrent();
 
         // Interaction
         gestureHandler = new GestureHandler();
         voiceCommand = new VoiceCommand();
 
+        // Breathing guide
+        breathingGuide = new BreathingGuide();
+
         // Audio
         audioEngine = new AudioEngine();
+        audioReactive = new AudioReactive();
 
         // Settings
         settingsPanel = new SettingsPanel();
@@ -95,25 +109,43 @@
         perfMonitor = new PerformanceMonitor();
         if (settingsPanel.getSettings().showFPS) perfMonitor.show();
 
-        // Analytics
+        // Analytics + achievements
         analytics = new SessionAnalytics();
+        achievements = new Achievements();
+        setupAchievementToasts();
+
+        // Idle behavior
+        idleBehavior = new IdleBehavior(jellyfishSwarm);
 
         // Screensaver
         screensaver = new Screensaver(stateManager);
 
         // WebSocket bridge
         wsBridge = new WSBridge();
-        // Auto-connect if not local file (can't WS from file://)
-        if (window.location.protocol !== 'file:') {
-            wsBridge.connect();
-        }
+        if (window.location.protocol !== 'file:') wsBridge.connect();
 
         // System APIs
         SystemAPIs.initBattery();
         SystemAPIs.requestWakeLock();
 
+        // Help overlay + changelog
+        helpOverlay = new HelpOverlay();
+        changelog = new Changelog();
+
+        // Auto dark mode
+        autoDark = new AutoDark(themeManager);
+        autoDark.check();
+
+        // URL state
+        const restored = URLState.apply(stateManager, themeManager);
+        if (restored) {
+            currentTheme = themeManager.getTheme();
+            updateStatus(stateManager.getState());
+        }
+
         // Jellyfish swarm
         createJellyfishSwarm();
+        lifecycle = new Lifecycle(jellyfishSwarm);
 
         // Event wiring
         setupGestures();
@@ -124,6 +156,8 @@
         setupWSBridge();
         setupPredatorEvents();
         setupStateChangeEffects();
+        setupTouchDrag();
+        setupStormEvents();
 
         // UI events
         modeToggle.addEventListener('click', () => cycleState());
@@ -131,12 +165,10 @@
         // Start animation
         requestAnimationFrame(animate);
 
-        setTimeout(() => {
-            splashScreen.classList.add('hidden');
-        }, 900);
+        setTimeout(() => splashScreen.classList.add('hidden'), 900);
 
         updateStatus('ready');
-        announceToScreenReader('Cnidaria Frames ready');
+        announceToScreenReader('Cnidaria Frames ready. Press question mark for help.');
     }
 
     // ─── Responsive swarm with personalities ───
@@ -147,14 +179,12 @@
         const diag = Math.sqrt(w * w + h * h);
         const baseScale = Utils.clamp(diag / 1200, 0.55, 1.4);
 
-        // Primary
         const leader = new Jellyfish(w / 2, h / 2, baseScale);
         leader.personality = new Personality('leader');
         leader.personality.apply(leader);
         jellyfish = leader;
         jellyfishSwarm.push(leader);
 
-        // Companions
         const count = (w * h) > 400000 ? 3 : (w * h) > 250000 ? 2 : 0;
         for (let i = 0; i < count; i++) {
             const jf = new Jellyfish(
@@ -180,6 +210,9 @@
         if (particleSystem) particleSystem.init(window.innerWidth, window.innerHeight);
         if (caustics) caustics.resize();
         if (predatorManager) predatorManager.resize(window.innerWidth, window.innerHeight);
+        if (seafloor) seafloor.resize();
+        if (coralReef) coralReef.resize();
+        if (mantaRayManager) mantaRayManager.resize(window.innerWidth, window.innerHeight);
         if (jellyfish) {
             jellyfish.x = window.innerWidth / 2;
             jellyfish.y = window.innerHeight / 2;
@@ -197,28 +230,42 @@
         const motionFactor = (settings.reducedMotion || reducedMotion) ? 0.2 : 1.0;
         const battery = SystemAPIs.batteryInfo || { throttled: false };
         const throttleMult = battery.throttled ? 0.5 : 1.0;
+        const effectiveDt = dt * motionFactor * throttleMult;
+
+        // Audio reactivity
+        const micLevel = audioReactive ? audioReactive.getLevel() : 0;
+
+        // Storm shake
+        const shake = storm ? storm.getShake() : { x: 0, y: 0 };
+        if (storm.active) {
+            ctx.save();
+            ctx.translate(shake.x, shake.y);
+        }
 
         // Background: theme + lunar
         const theme = currentTheme || themeManager.getTheme();
-        const lunarTint = lunarPhase.getBrightnessMod();
+        const lunarTint = lunarPhase ? lunarPhase.getBrightnessMod() : 0;
         ctx.fillStyle = theme.bg || '#000a1a';
         ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-        // Caustics (behind everything)
+        // Caustics
         if (caustics && !settings.reducedMotion) {
-            caustics.update(dt * throttleMult);
+            caustics.update(effectiveDt);
             caustics.draw(ctx, theme);
         }
 
         // Depth-of-field with theme tint
         drawDepthOfField(theme, lunarTint);
 
-        const limbicParams = limbicBridge ? limbicBridge.getParams() : {};
-        const currentState = stateManager ? stateManager.getState() : 'idle';
+        // Plankton bloom (behind entities)
+        if (planktonBloom) {
+            planktonBloom.update(effectiveDt, window.innerWidth, window.innerHeight);
+            planktonBloom.draw(ctx);
+        }
 
         // Particles (background layer)
         if (particleSystem) {
-            particleSystem.update(dt * throttleMult, window.innerWidth, window.innerHeight);
+            particleSystem.update(effectiveDt, window.innerWidth, window.innerHeight);
             particleSystem.draw(ctx);
         }
 
@@ -228,10 +275,11 @@
             foodSystem.attract(jellyfishSwarm);
             foodSystem.checkCollisions(jellyfishSwarm, (x, y, jf) => {
                 if (particleSystem) {
-                    const hue = Utils.map(currentState.charCodeAt(0), 97, 122, 180, 300);
+                    const hue = Utils.map(stateManager.getState().charCodeAt(0), 97, 122, 180, 300);
                     particleSystem.emitBurst(x, y, 12, hue);
                 }
                 analytics.logFood();
+                achievements.checkFood();
                 SystemAPIs.haptic('eat');
             });
             foodSystem.draw(ctx);
@@ -243,16 +291,43 @@
             predatorManager.draw(ctx);
         }
 
+        // Manta ray
+        if (mantaRayManager) {
+            mantaRayManager.update(dt, window.innerWidth, window.innerHeight);
+            mantaRayManager.draw(ctx);
+        }
+
         // Ink cloud
         if (inkCloud) {
             inkCloud.update(dt);
             inkCloud.draw(ctx);
         }
 
+        // Storm
+        if (storm) {
+            storm.update(dt);
+            storm.draw(ctx);
+        }
+
+        // Touch ripples
+        if (touchRipple) {
+            touchRipple.update(dt);
+            touchRipple.draw(ctx);
+        }
+
         // Jellyfish swarm
+        const limbicParams = limbicBridge ? limbicBridge.getParams() : {};
+        const currentState = stateManager ? stateManager.getState() : 'idle';
+
         for (const jf of jellyfishSwarm) {
             jf.setState(currentState);
-            jf.update(dt * throttleMult, now / 1000, limbicParams, settings.reducedMotion);
+
+            // Audio reactivity modulates pulse
+            if (micLevel > 0) {
+                jf.pulsePhase += micLevel * dt * 2;
+            }
+
+            jf.update(effectiveDt, now / 1000, limbicParams, settings.reducedMotion);
 
             if (jf !== jellyfish && jellyfishSwarm.length > 1) {
                 jf.updateNeighbors(jellyfishSwarm, window.innerWidth, window.innerHeight);
@@ -265,6 +340,11 @@
                 jf.color.b = Utils.clamp(jf.color.b + theme.jellyfishTint.b, 0, 255);
             }
 
+            // Water current drift
+            if (waterCurrent && jf !== jellyfish) {
+                waterCurrent.apply(jf, effectiveDt);
+            }
+
             jf.draw(ctx);
 
             if (particleSystem && !settings.reducedMotion) {
@@ -272,11 +352,45 @@
             }
         }
 
+        // Idle behaviors
+        if (idleBehavior) idleBehavior.update(dt);
+
+        // Lifecycle (grow then split)
+        if (lifecycle) lifecycle.update(dt);
+
+        // Breathing guide
+        if (breathingGuide) breathingGuide.update(dt, jellyfish ? jellyfish.pulsePhase : 0);
+
+        // Seafloor + coral (foreground layer)
+        if (seafloor) {
+            seafloor.update(dt);
+            seafloor.draw(ctx);
+        }
+        if (coralReef) {
+            coralReef.update(dt);
+            coralReef.draw(ctx);
+        }
+
+        // Water current UI
+        if (waterCurrent) waterCurrent.update(dt);
+
+        // Session duration check
+        const elapsed = (Date.now() - sessionStart) / 1000;
+        achievements.checkSessionDuration(elapsed);
+
         // Performance monitor
         if (perfMonitor) {
             const tp = particleSystem ? particleSystem.bubbles.length + particleSystem.sparkles.length : 0;
             perfMonitor.tick(now, tp);
             perfMonitor.setFrameTime(dt * 1000);
+        }
+
+        // Restore from storm shake
+        if (storm && storm.active) ctx.restore();
+
+        // Update URL hash for sharing
+        if (stateManager && themeManager && (now % 2000 < 20)) {
+            URLState.push(stateManager.getState(), themeManager.current, settings);
         }
 
         animationId = requestAnimationFrame(animate);
@@ -303,7 +417,9 @@
         document.addEventListener('cnidaria:tap', e => {
             analytics.activity();
             if (audioEngine && !audioEngine.isPlaying) audioEngine.start();
-            // Drop food on canvas tap (not on controls)
+            if (touchRipple && e.detail) {
+                touchRipple.add(e.detail.x, e.detail.y);
+            }
             if (foodSystem && e.detail && e.detail.y < window.innerHeight - 80) {
                 foodSystem.drop(e.detail.x, e.detail.y);
             }
@@ -319,10 +435,11 @@
             } else if (direction === 'down') {
                 goBackState();
             } else if (direction === 'right') {
-                // Cycle theme
                 const newTheme = themeManager.cycle();
                 currentTheme = themeManager.getTheme();
+                achievements.checkTheme(newTheme);
                 analytics.logTheme(newTheme);
+                autoDark.setManualOverride(true);
                 announceToScreenReader('Theme: ' + newTheme);
             } else if (direction === 'left') {
                 SystemAPIs.exportScreenshot(canvas);
@@ -337,6 +454,7 @@
                 particleSystem.emitBurst(x, y, 20, hue);
             }
             if (audioEngine) audioEngine._playBubblePop();
+            if (touchRipple) touchRipple.add(x, y);
         });
 
         document.addEventListener('cnidaria:longpress', () => {
@@ -362,12 +480,17 @@
         document.addEventListener('cnidaria:togglefps', () => perfMonitor.toggle());
         document.addEventListener('cnidaria:opensettings', () => settingsPanel.open());
 
-        // v1.2 keyboard shortcuts
-        document.addEventListener('cnidaria:exportscreenshot', () => SystemAPIs.exportScreenshot(canvas));
+        // v1.2+ shortcuts
+        document.addEventListener('cnidaria:exportscreenshot', () => {
+            SystemAPIs.exportScreenshot(canvas);
+            achievements.checkScreenshot();
+        });
         document.addEventListener('cnidaria:toggletheme', () => {
             const newTheme = themeManager.cycle();
             currentTheme = themeManager.getTheme();
+            achievements.checkTheme(newTheme);
             analytics.logTheme(newTheme);
+            autoDark.setManualOverride(true);
             announceToScreenReader('Theme: ' + newTheme);
         });
         document.addEventListener('cnidaria:togglevoice', () => {
@@ -375,6 +498,38 @@
         });
         document.addEventListener('cnidaria:fullscreen:request', () => SystemAPIs.toggleFullscreen());
         document.addEventListener('cnidaria:fullscreen:exit', () => SystemAPIs.toggleFullscreen());
+
+        // v1.3 shortcuts
+        document.addEventListener('keydown', e => {
+            if (e.key === '?') { e.preventDefault(); helpOverlay.toggle(); }
+            if (e.key === 'b') { e.preventDefault(); breathingGuide.toggle(); }
+            if (e.key === 'm') { e.preventDefault(); if (audioReactive) audioReactive.toggle(); }
+            if (e.key === 'w') { e.preventDefault(); storm.toggle(); achievements.checkStorm(); }
+            if (e.key === 'p') { e.preventDefault(); if (planktonBloom) planktonBloom.trigger(); }
+        });
+    }
+
+    // ─── Touch-drag steering ───
+    function setupTouchDrag() {
+        let dragging = false;
+        canvas.addEventListener('pointerdown', e => {
+            dragging = true;
+            canvas.setPointerCapture(e.pointerId);
+        });
+        canvas.addEventListener('pointermove', e => {
+            if (!dragging || !jellyfish) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            // Soft follow with spring
+            const dx = x - jellyfish.x;
+            const dy = y - jellyfish.y;
+            jellyfish.vx += dx * 0.003;
+            jellyfish.vy += dy * 0.003;
+            if (touchRipple) touchRipple.add(x, y);
+        });
+        canvas.addEventListener('pointerup', () => { dragging = false; });
+        canvas.addEventListener('pointercancel', () => { dragging = false; });
     }
 
     // ─── Voice commands ───
@@ -393,6 +548,7 @@
                 pushHistory(stateManager.getState());
                 stateManager.setState(s);
                 updateStatus(s);
+                achievements.checkVoice();
                 announceToScreenReader('Voice: ' + s);
             }
         });
@@ -400,13 +556,18 @@
             const t = e.detail;
             if (themeManager.setTheme(t)) {
                 currentTheme = themeManager.getTheme();
+                achievements.checkTheme(t);
                 analytics.logTheme(t);
+                autoDark.setManualOverride(true);
                 announceToScreenReader('Theme: ' + t);
             }
         });
         document.addEventListener('cnidaria:voice:next', () => cycleState());
         document.addEventListener('cnidaria:voice:previous', () => goBackState());
-        document.addEventListener('cnidaria:voice:screenshot', () => SystemAPIs.exportScreenshot(canvas));
+        document.addEventListener('cnidaria:voice:screenshot', () => {
+            SystemAPIs.exportScreenshot(canvas);
+            achievements.checkScreenshot();
+        });
         document.addEventListener('cnidaria:voice:fullscreen', () => SystemAPIs.toggleFullscreen());
     }
 
@@ -425,25 +586,37 @@
         document.addEventListener('cnidaria:setting:reducedmotionchange', e => {
             reducedMotion = e.detail;
         });
-
-        // Theme change
         document.addEventListener('cnidaria:setting:themechange', e => {
             if (themeManager.setTheme(e.detail)) {
                 currentTheme = themeManager.getTheme();
                 analytics.logTheme(e.detail);
+                autoDark.setManualOverride(true);
             }
         });
-
-        // Voice toggle
         document.addEventListener('cnidaria:setting:voicechange', e => {
             if (voiceCommand) {
                 e.detail ? voiceCommand.start() : voiceCommand.stop();
             }
         });
-
-        // Predator toggle
         document.addEventListener('cnidaria:setting:predatorchange', e => {
             if (predatorManager) predatorManager.enabled = e.detail;
+        });
+
+        // v1.3 settings events
+        document.addEventListener('cnidaria:setting:stormchange', e => {
+            if (e.detail) storm.start(); else storm.stop();
+        });
+        document.addEventListener('cnidaria:setting:breathingchange', e => {
+            if (breathingGuide) breathingGuide.toggle();
+        });
+        document.addEventListener('cnidaria:setting:micchange', e => {
+            if (audioReactive) e.detail ? audioReactive.start() : audioReactive.stop();
+        });
+        document.addEventListener('cnidaria:setting:exportanalytics', () => {
+            analytics.exportJSON();
+        });
+        document.addEventListener('cnidaria:setting:showchangelog', () => {
+            if (changelog) changelog.show();
         });
     }
 
@@ -453,15 +626,14 @@
             const { state, source } = e.detail || {};
             if (!state) return;
             analytics.logState(state);
+            achievements.checkState(state);
             SystemAPIs.haptic(state === 'error' ? 'heavy' : 'light');
             announceToScreenReader('State: ' + state);
 
-            // Ink cloud on error
             if (state === 'error' && inkCloud && jellyfish) {
                 inkCloud.burst(jellyfish.x, jellyfish.y);
             }
 
-            // WS broadcast
             if (wsBridge && source !== 'ws') {
                 wsBridge.broadcastState(state);
             }
@@ -472,11 +644,11 @@
     function setupPredatorEvents() {
         document.addEventListener('cnidaria:predator:spawn', () => {
             analytics.logPredator();
+            achievements.checkPredator();
             SystemAPIs.haptic('panic');
             announceToScreenReader('Warning: predator detected');
         });
         document.addEventListener('cnidaria:predator:midpoint', () => {
-            // Scatter swarm away from center
             for (const jf of jellyfishSwarm) {
                 const dx = jf.x - window.innerWidth / 2;
                 const dy = jf.y - window.innerHeight / 2;
@@ -484,6 +656,16 @@
                 jf.vx += (dx / dist) * 3;
                 jf.vy += (dy / dist) * 3;
             }
+        });
+    }
+
+    // ─── Storm events ───
+    function setupStormEvents() {
+        document.addEventListener('cnidaria:storm:start', () => {
+            if (storm) storm.start();
+        });
+        document.addEventListener('cnidaria:storm:stop', () => {
+            if (storm) storm.stop();
         });
     }
 
@@ -501,20 +683,57 @@
         });
     }
 
-    // ─── State history ───
-    function pushHistory(state) {
-        stateHistory.push(state);
-        if (stateHistory.length > MAX_HISTORY) stateHistory.shift();
-    }
-
-    function goBackState() {
-        if (stateHistory.length > 0 && stateManager) {
-            const prev = stateHistory.pop();
-            stateManager.setState(prev);
-            updateStatus(prev);
+    // ─── Network status ───
+    function setupNetworkStatus() {
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                netStatus.classList.remove('offline');
+                netText.textContent = 'online';
+                netStatus.classList.remove('hidden');
+            } else {
+                netStatus.classList.add('offline');
+                netText.textContent = 'offline';
+                netStatus.classList.remove('hidden');
+            }
         }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
     }
 
+    // ─── Orientation (gyroscope) ───
+    function setupOrientation() {
+        if (!window.DeviceOrientationEvent) return;
+        window.addEventListener('deviceorientation', e => {
+            if (!jellyfish) return;
+            const tiltX = (e.gamma || 0) / 45;
+            const tiltY = (e.beta || 0) / 45;
+            jellyfish.vx += tiltX * 0.3;
+            jellyfish.vy += tiltY * 0.3;
+        });
+    }
+
+    // ─── Achievement toasts ───
+    function setupAchievementToasts() {
+        document.addEventListener('cnidaria:achievement', e => {
+            const d = e.detail;
+            const toast = document.getElementById('achievementToast');
+            if (!toast) return;
+            toast.innerHTML = `
+                <div class="achievement-toast-inner">
+                    <span class="achievement-icon">${d.icon}</span>
+                    <div class="achievement-text">
+                        <div class="achievement-title">${d.label}</div>
+                        <div class="achievement-desc">${d.desc}</div>
+                    </div>
+                </div>
+            `;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        });
+    }
+
+    // ─── State helpers ───
     function cycleState() {
         if (!stateManager) return;
         pushHistory(stateManager.getState());
@@ -522,92 +741,37 @@
         updateStatus(stateManager.getState());
     }
 
-    // ─── Network status ───
-    function setupNetworkStatus() {
-        function update() {
-            if (!netStatus || !netText) return;
-            const online = navigator.onLine;
-            netStatus.classList.toggle('hidden', false);
-            netStatus.classList.toggle('offline', !online);
-            netText.textContent = online ? 'online' : 'offline';
-        }
-        window.addEventListener('online', update);
-        window.addEventListener('offline', update);
-        update();
+    function goBackState() {
+        if (stateHistory.length === 0) return;
+        const prev = stateHistory.pop();
+        if (stateManager) stateManager.setState(prev);
+        updateStatus(prev);
     }
 
-    // ─── Device orientation ───
-    function setupOrientation() {
-        if (!window.DeviceOrientationEvent) return;
-        const sensitivity = settingsPanel ? settingsPanel.getSettings().motionSensitivity : 0.5;
-        window.addEventListener('deviceorientation', e => {
-            if (!jellyfish || !e.gamma || !e.beta) return;
-            const tiltX = (e.gamma / 45) * sensitivity * 20;
-            const tiltY = (e.beta / 45) * sensitivity * 10;
-            jellyfish.x = Utils.lerp(jellyfish.x, window.innerWidth / 2 + tiltX, 0.03);
-            jellyfish.y = Utils.lerp(jellyfish.y, window.innerHeight / 2 + tiltY, 0.03);
-        }, { passive: true });
+    function pushHistory(state) {
+        if (previousState === state) return;
+        stateHistory.push(state);
+        if (stateHistory.length > MAX_HISTORY) stateHistory.shift();
+        previousState = state;
     }
 
-    // ─── Status ───
-    let statusTimeout;
-    function updateStatus(text) {
+    function updateStatus(state) {
         if (!statusText) return;
-        statusText.textContent = text;
+        statusText.textContent = state;
         statusIndicator.classList.remove('hidden');
-        clearTimeout(statusTimeout);
-        statusTimeout = setTimeout(() => {
-            statusIndicator.classList.add('hidden');
-        }, 3000);
     }
 
-    // ─── Screen reader announcements ───
-    function announceToScreenReader(text) {
-        if (!ariaAnnouncer) return;
-        ariaAnnouncer.textContent = text;
-        setTimeout(() => { ariaAnnouncer.textContent = ''; }, 1000);
-    }
-
-    // ─── Visibility ───
-    function handleVisibilityChange() {
-        if (document.hidden) {
-            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-            if (audioEngine) audioEngine.stop();
-            SystemAPIs.releaseWakeLock();
-        } else {
-            lastTime = performance.now();
-            animationId = requestAnimationFrame(animate);
-            SystemAPIs.requestWakeLock();
+    function announceToScreenReader(msg) {
+        if (ariaAnnouncer) {
+            ariaAnnouncer.textContent = msg;
+            setTimeout(() => { ariaAnnouncer.textContent = ''; }, 1000);
         }
     }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // ─── Boot ───
+    // ─── Start ───
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
-
-    // ─── Debug namespace ───
-    window.Cnidaria = {
-        get jellyfish() { return jellyfish; },
-        get swarm() { return jellyfishSwarm; },
-        get stateManager() { return stateManager; },
-        get limbicBridge() { return limbicBridge; },
-        get particleSystem() { return particleSystem; },
-        get audioEngine() { return audioEngine; },
-        get settings() { return settingsPanel ? settingsPanel.getSettings() : {}; },
-        get themeManager() { return themeManager; },
-        get analytics() { return analytics; },
-        get wsBridge() { return wsBridge; },
-        get voiceCommand() { return voiceCommand; },
-        updateStatus,
-        cycleState,
-        goBackState,
-        exportScreenshot: () => SystemAPIs.exportScreenshot(canvas),
-        toggleFullscreen: () => SystemAPIs.toggleFullscreen(),
-        startVoice: () => voiceCommand.start(),
-        stopVoice: () => voiceCommand.stop()
-    };
 })();

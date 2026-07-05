@@ -15,9 +15,11 @@
 </head>
 <body>
     <!--
-      Cnidaria Frames — A Jellyfish Agent v1.2
+      Cnidaria Frames — A Jellyfish Agent v1.3
       Procedural jellyfish with ambient particles, audio, flocking,
-      feeding, predators, themes, personalities, voice, and sync.
+      feeding, predators, themes, personalities, voice, sync, seafloor,
+      coral, manta rays, storms, plankton, breathing guide, achievements,
+      lifecycle, analytics, water current, touch steering, and more.
     -->
 
     <!-- Loading splash screen -->
@@ -49,10 +51,13 @@
         <span>Listening…</span>
     </div>
 
+    <!-- Achievement toast container -->
+    <div id="achievementToast"></div>
+
     <!-- Accessibility live region -->
     <div id="ariaAnnouncer" class="sr-only" role="log" aria-live="polite" aria-atomic="true"></div>
 
-    <!-- Scripts -->
+    <!-- Scripts (v1.3: 22 modules, load-order matters) -->
     <script src="js/utils.js"></script>
     <script src="js/lunar-phase.js"></script>
     <script src="js/themes.js"></script>
@@ -73,6 +78,23 @@
     <script src="js/performance-monitor.js"></script>
     <script src="js/screensaver.js"></script>
     <script src="js/ws-bridge.js"></script>
+    <!-- v1.3 new modules -->
+    <script src="js/seafloor.js"></script>
+    <script src="js/manta-ray.js"></script>
+    <script src="js/plankton.js"></script>
+    <script src="js/breathing-guide.js"></script>
+    <script src="js/storm.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/audio-reactive.js"></script>
+    <script src="js/lifecycle.js"></script>
+    <script src="js/url-state.js"></script>
+    <script src="js/water-current.js"></script>
+    <script src="js/coral.js"></script>
+    <script src="js/help-overlay.js"></script>
+    <script src="js/changelog.js"></script>
+    <script src="js/auto-dark.js"></script>
+    <script src="js/touch-ripple.js"></script>
+    <script src="js/idle-behavior.js"></script>
     <script src="js/jellyfish.js"></script>
     <script src="js/main.js"></script>
 

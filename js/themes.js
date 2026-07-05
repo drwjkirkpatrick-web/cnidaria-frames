@@ -90,5 +90,39 @@
         }
     }
 
+    // Color-blind accessible variants using patterns + high contrast
+    const CB_THEMES = {
+        cb_protanopia: {
+            bg: '#0a0a14',
+            bubbleColor: '#ffd700',
+            sparkleHue: [45, 75],
+            causticColor: 'rgba(255, 215, 0, 0.05)',
+            dofTint: [10, 10, 0],
+            jellyfishTint: { r: 40, g: 30, b: -20 },
+            pattern: 'stripes'
+        },
+        cb_deuteranopia: {
+            bg: '#0a0a14',
+            bubbleColor: '#ff8c00',
+            sparkleHue: [25, 55],
+            causticColor: 'rgba(255, 140, 0, 0.05)',
+            dofTint: [10, 5, 0],
+            jellyfishTint: { r: 40, g: 10, b: -20 },
+            pattern: 'dots'
+        },
+        cb_tritanopia: {
+            bg: '#0a0a0a',
+            bubbleColor: '#ff4444',
+            sparkleHue: [0, 30],
+            causticColor: 'rgba(255, 68, 68, 0.05)',
+            dofTint: [10, 0, 0],
+            jellyfishTint: { r: 40, g: -10, b: -10 },
+            pattern: 'crosshatch'
+        }
+    };
+
+    // Merge into THEMES for manager access
+    Object.assign(THEMES, CB_THEMES);
+
     global.ThemeManager = ThemeManager;
 })(window);
