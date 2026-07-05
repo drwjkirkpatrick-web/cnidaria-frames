@@ -17,14 +17,10 @@
     const statusText = document.getElementById('statusText');
     const modeToggle = document.getElementById('modeToggle');
     
-    // Initialize canvas size
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    
-    // Jellyfish instance
+    // Components
     let jellyfish;
+    let stateManager;
+    let limbicBridge;
     
     // Animation state
     let lastTime = 0;
@@ -35,6 +31,11 @@
         // Set up canvas
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+        
+        // Initialize components
+        stateManager = new StateManager();
+        limbicBridge = new LimbicBridge();
+        limbicBridge.connect();
         
         // Create jellyfish in the center of the canvas
         jellyfish = new Jellyfish(canvas.width / 2, canvas.height / 2, 1);
@@ -49,6 +50,18 @@
         updateStatus('ready');
     }
     
+    // Initialize canvas size
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Reposition jellyfish if it exists
+        if (jellyfish) {
+            jellyfish.x = canvas.width / 2;
+            jellyfish.y = canvas.height / 2;
+        }
+    }
+    
     // Animation loop
     function animate(time) {
         // Calculate delta time in seconds
@@ -59,9 +72,16 @@
         ctx.fillStyle = '#000a1a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
+        // Get current state
+        const currentState = stateManager.getState();
+        
+        // Get limbic parameters
+        const limbicParams = limbicBridge.getParams();
+        
         // Update and draw jellyfish
         if (jellyfish) {
-            jellyfish.update(dt, time / 1000);
+            jellyfish.setState(currentState);
+            jellyfish.update(dt, time / 1000, limbicParams);
             jellyfish.draw(ctx);
         }
         
@@ -82,16 +102,12 @@
     
     // Toggle jellyfish mode
     function toggleMode() {
-        if (!jellyfish) return;
+        if (!stateManager) return;
         
-        // Cycle through states
-        const states = ['idle', 'active', 'thinking', 'success', 'error', 'sleeping'];
-        const currentIndex = states.indexOf(jellyfish.state);
-        const nextIndex = (currentIndex + 1) % states.length;
-        const nextState = states[nextIndex];
-        
-        jellyfish.setState(nextState);
-        updateStatus(nextState);
+        // Cycle to next state
+        stateManager.nextState();
+        const newState = stateManager.getState();
+        updateStatus(newState);
     }
     
     // Handle page visibility changes
@@ -122,6 +138,8 @@
     // Expose functions for debugging (optional)
     window.Cnidaria = {
         jellyfish: jellyfish,
+        stateManager: stateManager,
+        limbicBridge: limbicBridge,
         updateStatus: updateStatus
     };
     

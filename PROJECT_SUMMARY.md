@@ -1,6 +1,31 @@
-# Cnidaria Frames
+# Cnidaria Frames - Jellyfish Agent
 
 A minimalist jellyfish agent for Hermes, designed to run on small screens like iPads and iPhones.
+
+## Project Structure
+
+```
+cnidaria-frames/
+├── index.html              # Main HTML file
+├── manifest.json           # PWA manifest
+├── sw.js                   # Service worker for offline support
+├── server.py               # Simple HTTP server
+├── tailscale-setup.sh      # Tailscale setup script
+├── tailscale-funnel.sh     # Tailscale funnel script
+├── .gitignore              # Git ignore file
+├── README.md               # Project documentation
+├── css/
+│   ├── jellyfish.css       # Main styles
+│   └── cnidaria.css        # Additional styles
+├── js/
+│   ├── jellyfish.js        # Jellyfish class implementation
+│   ├── main.js             # Main controller
+│   ├── state-manager.js    # State management
+│   ├── limbic-bridge.js    # Bridge to Hermes limbic system
+│   └── utils.js            # Utility functions
+└── assets/
+    └── README.md           # Assets documentation
+```
 
 ## Features
 
@@ -9,17 +34,9 @@ A minimalist jellyfish agent for Hermes, designed to run on small screens like i
 - Responsive design for mobile devices
 - Lightweight implementation for low-power devices
 - PWA support for installation on mobile devices
+- Tailscale integration for remote access
 
 ## Usage
-
-### Quick Start
-
-1. Clone the repository
-2. Run `./start.sh` to start the server
-3. Open `http://localhost:8181` in a browser
-4. Tap the toggle button to cycle through jellyfish states
-
-### Manual Start
 
 1. Clone the repository
 2. Run `python3 server.py` to start the server
@@ -32,6 +49,7 @@ A minimalist jellyfish agent for Hermes, designed to run on small screens like i
 - Canvas-based rendering for smooth animations
 - No external dependencies
 - Works offline when installed as a PWA
+- Responsive design for various screen sizes
 
 ## Tailscale Integration
 
@@ -42,14 +60,6 @@ To access this agent through Tailscale:
 3. Run `./tailscale-setup.sh` to configure Tailscale
 4. Run `./tailscale-funnel.sh` to enable Funnel access
 5. Access via your Tailscale URL
-
-Example using Python's built-in server:
-```bash
-cd ~/projects/cnidaria-frames
-python3 -m http.server 8181
-```
-
-Then access via: `http://[tailscale-ip]:8181`
 
 ## States
 

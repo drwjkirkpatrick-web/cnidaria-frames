@@ -1,85 +1,68 @@
 /**
- * state-manager.js — Agent state management for Cnidaria Frames.
- * Same contract as hermes-aquarium-dashboard: reads hermes_agent_state from localStorage.
+ * state-manager.js - State management for Cnidaria Frames
+ *
+ * Handles state transitions and provides a simple API for
+ * changing the jellyfish's behavior.
  */
+
 (function(global) {
     'use strict';
-
-    const AGENT_STATES = [
-        'idle', 'active', 'thinking', 'success', 'error',
-        'sleeping', 'alert', 'learning', 'connecting', 'busy'
-    ];
-    const DEFAULT_STATE = 'idle';
-    const STORAGE_KEY = 'hermes_agent_state';
-
+    
     class StateManager {
         constructor() {
-            this.currentState = DEFAULT_STATE;
-            this.previousState = DEFAULT_STATE;
-            this.stateTime = 0;
-            this.demoMode = true;
-            this.demoInterval = 6;
-            this.lastDemoSwitch = 0;
-            this.readFromStorage();
+            this.currentState = 'idle';
+            this.previousState = null;
+            this.stateStartTime = Date.now();
+            this.stateDurations = {
+                'idle': 5000,
+                'active': 3000,
+                'thinking': 4000,
+                'success': 2000,
+                'error': 2500,
+                'sleeping': 8000
+            };
         }
-
-        readFromStorage() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    const data = JSON.parse(raw);
-                    if (AGENT_STATES.includes(data.state)) {
-                        this.setState(data.state);
-                        this.demoMode = data.demo !== undefined ? data.demo : false;
-                    }
-                }
-            } catch (e) {
-                this.demoMode = true;
-            }
+        
+        getState() {
+            return this.currentState;
         }
-
+        
         setState(newState) {
-            if (!AGENT_STATES.includes(newState)) return false;
-            if (newState === this.currentState) return false;
-            this.previousState = this.currentState;
-            this.currentState = newState;
-            this.stateTime = 0;
-            return true;
-        }
-
-        static writeState(state, details = {}) {
-            if (!AGENT_STATES.includes(state)) return false;
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                    state, timestamp: Date.now(), demo: false, ...details
-                }));
+            if (newState !== this.currentState) {
+                this.previousState = this.currentState;
+                this.currentState = newState;
+                this.stateStartTime = Date.now();
                 return true;
-            } catch (e) { return false; }
-        }
-
-        update(dt, now) {
-            this.stateTime += dt;
-            if (this.stateTime > 2 && Math.floor(this.stateTime * 10) % 20 === 0) {
-                this.readFromStorage();
             }
-            if (this.demoMode && now - this.lastDemoSwitch > this.demoInterval) {
-                this.lastDemoSwitch = now;
-                const idx = AGENT_STATES.indexOf(this.currentState);
-                this.setState(AGENT_STATES[(idx + 1) % AGENT_STATES.length]);
-            }
+            return false;
         }
-
-        getState() { return this.currentState; }
-        getPreviousState() { return this.previousState; }
-        getStateTime() { return this.stateTime; }
-        isDemo() { return this.demoMode; }
-        toggleDemo() {
-            this.demoMode = !this.demoMode;
-            this.lastDemoSwitch = performance.now() / 1000;
+        
+        // Cycle to the next state
+        nextState() {
+            const states = ['idle', 'active', 'thinking', 'success', 'error', 'sleeping'];
+            const currentIndex = states.indexOf(this.currentState);
+            const nextIndex = (currentIndex + 1) % states.length;
+            return this.setState(states[nextIndex]);
+        }
+        
+        // Get time spent in current state (in seconds)
+        getTimeInState() {
+            return (Date.now() - this.stateStartTime) / 1000;
+        }
+        
+        // Check if state has timed out
+        isStateTimedOut() {
+            const duration = this.stateDurations[this.currentState] || 5000;
+            return this.getTimeInState() > duration / 1000;
+        }
+        
+        // Reset to idle state
+        reset() {
+            this.setState('idle');
         }
     }
-
-    StateManager.STATES = AGENT_STATES;
-    StateManager.STORAGE_KEY = STORAGE_KEY;
+    
+    // Export for use in other modules
     global.StateManager = StateManager;
+    
 })(window);

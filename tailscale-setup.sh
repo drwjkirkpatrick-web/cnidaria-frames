@@ -1,21 +1,24 @@
-#!/usr/bin/env bash
-# tailscale-setup.sh — Install Tailscale on this Linux host if needed.
-# Run once with sudo.
+#!/bin/bash
+# tailscale-setup.sh - Setup script for Tailscale access
 
-set -euo pipefail
+echo "Setting up Tailscale for Cnidaria Frames..."
 
-if command -v tailscale &>/dev/null; then
-    echo "Tailscale already installed: $(tailscale version 2>/dev/null | head -1 || true)"
-    exit 0
+# Check if Tailscale is installed
+if ! command -v tailscale &> /dev/null; then
+    echo "Tailscale is not installed. Please install it first:"
+    echo "  Ubuntu/Debian: curl -fsSL https://tailscale.com/install.sh | sh"
+    echo "  Other systems: https://tailscale.com/download"
+    exit 1
 fi
 
-echo "Installing Tailscale..."
+# Check if we're already connected to Tailscale
+if tailscale status &>/dev/null; then
+    echo "Already connected to Tailscale"
+else
+    echo "Please authenticate with Tailscale by visiting the URL below:"
+    tailscale up
+fi
 
-# Generic Linux installer from tailscale.com
-# Works on Debian/Ubuntu, Fedora, Arch, etc.
-curl -fsSL https://tailscale.com/install.sh | sh
-
-echo "Tailscale installed."
-echo "Next steps:"
-echo "  sudo tailscale up"
-echo "  ./tailscale-funnel.sh"
+echo "Tailscale setup complete!"
+echo "Run './server.py' to start the Cnidaria Frames server"
+echo "Then access it via your Tailscale IP address"
