@@ -348,33 +348,81 @@ html, body {
     opacity: 1;
 }
 
-/* ─── Mode Toggle Button ─── */
+/* ─── Mode Toggle Button (legacy fallback) ─── */
 #modeToggle {
+    display: none; /* replaced by bottom toolbar */
+}
+
+/* ─── Bottom Toolbar ─── */
+#bottomToolbar {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(0,0,0,0.3);
-    color: #fff;
-    font-size: 18px;
-    cursor: pointer;
-    z-index: 10;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: rgba(0, 8, 20, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(170, 221, 255, 0.08);
+    pointer-events: auto;
+}
+
+#bottomToolbar button {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(170, 221, 255, 0.12);
+    background: rgba(0, 0, 0, 0.35);
+    color: #aaddff;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s, transform 0.1s;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
 }
 
-#modeToggle:hover {
-    background: rgba(0,0,0,0.6);
-    transform: scale(1.1);
+#bottomToolbar button:hover {
+    background: rgba(0, 0, 0, 0.55);
+    border-color: rgba(170, 221, 255, 0.25);
 }
 
-#modeToggle:active {
-    transform: scale(0.95);
+#bottomToolbar button:active {
+    transform: scale(0.92);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#bottomToolbar button.active {
+    background: rgba(106, 184, 255, 0.2);
+    border-color: rgba(106, 184, 255, 0.35);
+    color: #6ab8ff;
+}
+
+/* Landscape: slightly more compact */
+@media (orientation: landscape) and (max-height: 500px) {
+    #bottomToolbar {
+        gap: 6px;
+        padding: 4px 12px calc(4px + env(safe-area-inset-bottom, 0px));
+    }
+    #bottomToolbar button {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+}
+
+/* Very narrow screens: reduce to icon-only smaller */
+@media (max-width: 340px) {
+    #bottomToolbar button {
+        width: 38px;
+        height: 38px;
+    }
 }
 
 /* ─── Screen Reader Only ─── */

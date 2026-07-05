@@ -43,8 +43,11 @@ python3 ws_server.py
 | `w` | Toggle storm mode |
 | `p` | Trigger plankton bloom |
 
-## Features (v1.3)
+## Features (v2.0)
 
+- **Advanced vector-based jellyfish** with superellipsoid bell geometry, B-spline tentacles, radial grooves, and oral-arm fronds
+- **Proper centering** in both landscape and portrait using CSS pixel coordinates
+- **Visible bottom toolbar** with 6 icon buttons (prev, next, theme, audio, screenshot, settings)
 - **Seafloor terrain** with parallax scrolling
 - **Touch-drag steering** of the primary jellyfish
 - **Manta ray companion** with bioluminescent trail
@@ -111,8 +114,8 @@ python3 ws_server.py
 
 ```
 cnidaria-frames/
-├── index.html              # Entry point (v1.3, 22 script modules)
-├── css/jellyfish.css       # All styles + v1.3 overlays
+├── index.html              # Entry point (22 script modules + toolbar)
+├── css/jellyfish.css       # All styles + toolbar + v1.3 overlays
 ├── manifest.json           # PWA manifest
 ├── sw.js                   # Service worker (stale-while-revalidate)
 ├── server.py               # HTTP dev server (port 9191)
@@ -123,7 +126,7 @@ cnidaria-frames/
 │   └── apple-touch-icon.png
 └── js/
     ├── main.js             # v1.3 orchestrator (all subsystems)
-    ├── jellyfish.js        # Jellyfish draw + update + flocking
+    ├── jellyfish.js        # v2.0: superellipse bell, B-spline tentacles, grooves
     ├── particles.js        # Bubbles + sparkles
     ├── gesture-handler.js  # Touch + keyboard
     ├── audio-engine.js     # Procedural ambient sound

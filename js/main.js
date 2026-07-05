@@ -19,11 +19,17 @@
     // ─── UI elements ───
     const statusIndicator = document.getElementById('statusIndicator');
     const statusText = document.getElementById('statusText');
-    const modeToggle = document.getElementById('modeToggle');
     const splashScreen = document.getElementById('splashScreen');
     const netStatus = document.getElementById('netStatus');
     const netText = document.getElementById('netText');
     const ariaAnnouncer = document.getElementById('ariaAnnouncer');
+    // Toolbar buttons (v2.0)
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnTheme = document.getElementById('btnTheme');
+    const btnAudio = document.getElementById('btnAudio');
+    const btnCapture = document.getElementById('btnCapture');
+    const btnSettings = document.getElementById('btnSettings');
 
     // ─── Components ───
     let jellyfish, jellyfishSwarm = [];
@@ -170,7 +176,26 @@
         setupStormEvents();
 
         // UI events
-        modeToggle.addEventListener('click', () => cycleState());
+        if (btnPrev) btnPrev.addEventListener('click', () => goBackState());
+        if (btnNext) btnNext.addEventListener('click', () => cycleState());
+        if (btnTheme) btnTheme.addEventListener('click', () => {
+            const newTheme = themeManager.cycle();
+            currentTheme = themeManager.getTheme();
+            achievements.checkTheme(newTheme);
+            analytics.logTheme(newTheme);
+            autoDark.setManualOverride(true);
+            announceToScreenReader('Theme: ' + newTheme);
+        });
+        if (btnAudio) btnAudio.addEventListener('click', () => {
+            if (!audioEngine) return;
+            audioEngine.isPlaying ? audioEngine.stop() : audioEngine.start();
+            btnAudio.classList.toggle('active', audioEngine.isPlaying);
+        });
+        if (btnCapture) btnCapture.addEventListener('click', () => {
+            SystemAPIs.exportScreenshot(canvas);
+            achievements.checkScreenshot();
+        });
+        if (btnSettings) btnSettings.addEventListener('click', () => settingsPanel.open());
 
         // Start animation
         requestAnimationFrame(animate);
@@ -189,8 +214,9 @@
     // ─── Responsive swarm with personalities ───
     function createJellyfishSwarm() {
         jellyfishSwarm = [];
-        const w = canvas.width;
-        const h = canvas.height;
+        // Use CSS pixel dimensions (not canvas buffer size) for centering
+        const w = window.innerWidth;
+        const h = window.innerHeight;
         const diag = Math.sqrt(w * w + h * h);
         const baseScale = Utils.clamp(diag / 1200, 0.55, 1.4);
 
@@ -231,6 +257,13 @@
         if (jellyfish) {
             jellyfish.x = window.innerWidth / 2;
             jellyfish.y = window.innerHeight / 2;
+        }
+        // Recenter swarm members too
+        for (const jf of jellyfishSwarm) {
+            if (jf !== jellyfish) {
+                jf.x = Utils.clamp(jf.x, 60, window.innerWidth - 60);
+                jf.y = Utils.clamp(jf.y, 60, window.innerHeight - 60);
+            }
         }
     }
 
