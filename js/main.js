@@ -178,7 +178,6 @@
         setupStateChangeEffects();
         setupTouchDrag();
         setupStormEvents();
-        setupImageGeneration();
 
         // UI events
         if (btnGenerate) btnGenerate.addEventListener('click', () => generateJellyfishImage());
