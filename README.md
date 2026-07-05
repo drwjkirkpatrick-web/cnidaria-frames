@@ -43,13 +43,29 @@ python3 ws_server.py
 | `w` | Toggle storm mode |
 | `p` | Trigger plankton bloom |
 
-## Features (v3.0)
+## Features (v4.0)
 
+- **Procedurally animated jellyfish** from a single still frame — uses vertical slice-warping
+  to create flowing tentacle motion, breath pulse, and bell expansion without needing
+  a sprite sheet
+- **Full-viewport background** — depth-of-field gradient extends beyond corners, no
+  boundary edges visible during movement
+- **17 AI image models** via Nous Research / FAL.ai, organized by category in optgroups:
+  FLUX (7 models), Text & Brand (4), Specialty (6)
+- **Deluxe color selector** in settings — Hue/Saturation/Lightness sliders with live
+  preview circle, applies directly to jellyfish glow and tint
+- **Saved jellyfish gallery** — 3×3 grid of saved images with date, one-click load,
+  delete, and preview panel
+- **Labeled toolbar** buttons with keyboard shortcuts shown in tooltips (G, V, S, t, a, s)
+- **Tab visibility pause** — animation and audio stop when tab is hidden to save battery
+- **Smooth re-centering** on resize with lerp interpolation
+- **Toast notifications** for save/load feedback
+- **Loading spinner** and **error fallback** on image load
 - **Single AI-generated jellyfish** — one image-based medusa per session, properly bounded to screen
 - **Image generation toolbar** with Generate, Variation, Save buttons (bottom of screen)
-- **Settings panel** with custom prompt text input, style selector (vector/animation/neon/botanical/crystal/organic), lighting selector, and model dropdown (FLUX 2 Klein/Dev/Pro)
-- **Prompt builder** with vector-animation nudges: "clean geometric lines, flat colors, no photorealism, no 3D render, 2D vector illustration"
-- **8 pre-generated variants** in `assets/jellyfish-variants/` (moon, neon, pastel, box, comb, crystal, amber, lion's mane)
+- **Settings panel** with custom prompt text input, style selector, lighting selector, model dropdown
+- **Prompt builder** with vector-animation nudges: "clean geometric lines, flat colors, no photorealism"
+- **8 pre-generated variants** in `assets/jellyfish-variants/`
 - **localStorage save** for generated jellyfish with metadata
 - **Seafloor terrain** with parallax scrolling
 - **Touch-drag steering** of the jellyfish

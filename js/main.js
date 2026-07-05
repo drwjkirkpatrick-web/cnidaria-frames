@@ -561,12 +561,13 @@
         const w = window.innerWidth;
         const h = window.innerHeight;
         const cx = w / 2, cy = h / 2;
-        const maxR = Math.max(w, h) * 0.75;
+        // Extend beyond viewport corners so no boundary is visible
+        const maxR = Math.max(w, h) * 1.5;
         const tint = theme && theme.dofTint ? theme.dofTint : [0, 5, 20];
         const lm = Math.round((lunarMod || 0) * 255);
-        const grad = ctx.createRadialGradient(cx, cy, maxR * 0.15, cx, cy, maxR);
+        const grad = ctx.createRadialGradient(cx, cy, maxR * 0.1, cx, cy, maxR);
         grad.addColorStop(0, `rgba(${tint[0]}, ${tint[1]}, ${tint[2]}, 0)`);
-        grad.addColorStop(0.6, `rgba(${tint[0]}, ${tint[1]}, ${tint[2]}, 0.15)`);
+        grad.addColorStop(0.5, `rgba(${tint[0]}, ${tint[1]}, ${tint[2]}, 0.15)`);
         grad.addColorStop(1, `rgba(${Math.min(255, tint[0]+lm)}, ${Math.min(255, tint[1]+lm)}, ${Math.min(255, tint[2]+lm)}, 0.55)`);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, h);
@@ -782,6 +783,24 @@
         });
         document.addEventListener('cnidaria:setting:showchangelog', () => {
             if (changelog) changelog.show();
+        });
+
+        // v4.0 deluxe color selector
+        document.addEventListener('cnidaria:setting:colorchange', e => {
+            const { h, s, l } = e.detail || {};
+            if (jellyfish) jellyfish.setColorOverride(h, s, l);
+        });
+        document.addEventListener('cnidaria:setting:colorclear', () => {
+            if (jellyfish) jellyfish.clearColorOverride();
+        });
+
+        // v4.0 gallery load
+        document.addEventListener('cnidaria:setting:galleryload', e => {
+            const url = e.detail;
+            if (jellyfish) {
+                jellyfish.setImage(url);
+                showToast('Gallery jellyfish loaded', 'success');
+            }
         });
     }
 

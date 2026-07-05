@@ -353,7 +353,7 @@ html, body {
     display: none; /* replaced by bottom toolbar */
 }
 
-/* ─── Bottom Toolbar ─── */
+/* ─── Bottom Toolbar v4.0 ─── */
 #bottomToolbar {
     position: fixed;
     bottom: 0;
@@ -373,19 +373,33 @@ html, body {
 }
 
 #bottomToolbar button {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
     border: 1px solid rgba(170, 221, 255, 0.12);
     background: rgba(0, 0, 0, 0.35);
     color: #aaddff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
     transition: background 0.15s, transform 0.1s, border-color 0.15s;
     -webkit-tap-highlight-color: transparent;
     flex-shrink: 0;
+    padding: 4px;
+}
+
+#bottomToolbar button svg {
+    flex-shrink: 0;
+}
+
+#bottomToolbar button .btn-label {
+    font-size: 9px;
+    letter-spacing: 0.02em;
+    opacity: 0.7;
+    line-height: 1;
 }
 
 #bottomToolbar button:hover {
@@ -404,6 +418,15 @@ html, body {
     color: #6ab8ff;
 }
 
+#bottomToolbar button.loading svg {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* Landscape: slightly more compact */
 @media (orientation: landscape) and (max-height: 500px) {
     #bottomToolbar {
@@ -411,17 +434,23 @@ html, body {
         padding: 4px 12px calc(4px + env(safe-area-inset-bottom, 0px));
     }
     #bottomToolbar button {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         border-radius: 10px;
+    }
+    #bottomToolbar button .btn-label {
+        display: none;
     }
 }
 
-/* Very narrow screens: reduce to icon-only smaller */
+/* Very narrow screens */
 @media (max-width: 340px) {
     #bottomToolbar button {
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
+    }
+    #bottomToolbar button .btn-label {
+        display: none;
     }
 }
 

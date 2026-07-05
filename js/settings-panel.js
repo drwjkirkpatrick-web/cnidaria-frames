@@ -28,7 +28,11 @@
                 jellyfishPrompt: '',
                 jellyfishStyle: 'vector',
                 jellyfishLighting: 'biolum',
-                imageModel: 'flux-2-klein'
+                imageModel: 'flux-2-klein',
+                hue: 220,
+                saturation: 60,
+                lightness: 55,
+                fullscreen: false
             };
             this._load();
             this._buildDOM();
@@ -116,7 +120,7 @@
                             <input type="checkbox" id="setting-mic">
                             <span class="cnidaria-toggle-knob"></span>
                         </label>
-                        <!-- Image Generation Settings (v3.0) -->
+                        <!-- Image Generation Settings (v4.0) -->
                         <div style="padding:12px 0;border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;">
                             <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">JELLYFISH GENERATOR</div>
                             <label class="cnidaria-setting-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
@@ -147,11 +151,81 @@
                             <label class="cnidaria-setting-row">
                                 <span>Model</span>
                                 <select id="setting-model">
-                                    <option value="flux-2-klein" ${this.settings.imageModel==='flux-2-klein'?'selected':''}>FLUX 2 Klein</option>
-                                    <option value="flux-2-dev" ${this.settings.imageModel==='flux-2-dev'?'selected':''}>FLUX 2 Dev</option>
-                                    <option value="flux-2-pro" ${this.settings.imageModel==='flux-2-pro'?'selected':''}>FLUX 2 Pro</option>
+                                    <optgroup label="FLUX">
+                                        <option value="flux-2-klein" ${this.settings.imageModel==='flux-2-klein'?'selected':''}>FLUX 2 Klein — Fast, balanced</option>
+                                        <option value="flux-2-dev" ${this.settings.imageModel==='flux-2-dev'?'selected':''}>FLUX 2 Dev — High quality</option>
+                                        <option value="flux-2-pro" ${this.settings.imageModel==='flux-2-pro'?'selected':''}>FLUX 2 Pro — Best quality</option>
+                                        <option value="flux-2-schnell" ${this.settings.imageModel==='flux-2-schnell'?'selected':''}>FLUX 2 Schnell — Ultra-fast</option>
+                                        <option value="flux-2-fill" ${this.settings.imageModel==='flux-2-fill'?'selected':''}>FLUX 2 Fill — Inpainting</option>
+                                        <option value="flux-2-canny" ${this.settings.imageModel==='flux-2-canny'?'selected':''}>FLUX 2 Canny — Edge-guided</option>
+                                        <option value="flux-2-depth" ${this.settings.imageModel==='flux-2-depth'?'selected':''}>FLUX 2 Depth — Depth-guided</option>
+                                    </optgroup>
+                                    <optgroup label="Text & Brand">
+                                        <option value="ideogram-2" ${this.settings.imageModel==='ideogram-2'?'selected':''}>Ideogram 2 — Typography + vectors</option>
+                                        <option value="ideogram-2-turbo" ${this.settings.imageModel==='ideogram-2-turbo'?'selected':''}>Ideogram 2 Turbo — Fast 4K</option>
+                                        <option value="recraft-3" ${this.settings.imageModel==='recraft-3'?'selected':''}>Recraft 3 — Brand-focused</option>
+                                        <option value="recraft-3-svg" ${this.settings.imageModel==='recraft-3-svg'?'selected':''}>Recraft 3 SVG — Native vector</option>
+                                    </optgroup>
+                                    <optgroup label="Specialty">
+                                        <option value="pony-realism" ${this.settings.imageModel==='pony-realism'?'selected':''}>Pony Realism — Anime mixing</option>
+                                        <option value="stable-cascade" ${this.settings.imageModel==='stable-cascade'?'selected':''}>Stable Cascade — 3-stage HQ</option>
+                                        <option value="sdxl" ${this.settings.imageModel==='sdxl'?'selected':''}>SDXL 1.0 — Reliable</option>
+                                        <option value="sdxl-turbo" ${this.settings.imageModel==='sdxl-turbo'?'selected':''}>SDXL Turbo — One-step fast</option>
+                                        <option value="playground-2-5" ${this.settings.imageModel==='playground-2-5'?'selected':''}>Playground v2.5 — Photoreal</option>
+                                        <option value="hyper-sd" ${this.settings.imageModel==='hyper-sd'?'selected':''}>Hyper-SD — Extreme speed</option>
+                                    </optgroup>
                                 </select>
                             </label>
+                            <!-- Deluxe Color Selector -->
+                            <div style="padding-top:8px;">
+                                <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">COLOR OVERRIDE</div>
+                                <label class="cnidaria-setting-row">
+                                    <span>Hue</span>
+                                    <input type="range" id="setting-hue" min="0" max="360" value="${this.settings.hue || 220}" style="width:120px;">
+                                </label>
+                                <label class="cnidaria-setting-row">
+                                    <span>Sat</span>
+                                    <input type="range" id="setting-saturation" min="0" max="100" value="${this.settings.saturation || 60}" style="width:120px;">
+                                </label>
+                                <label class="cnidaria-setting-row">
+                                    <span>Light</span>
+                                    <input type="range" id="setting-lightness" min="20" max="90" value="${this.settings.lightness || 55}" style="width:120px;">
+                                </label>
+                                <div id="colorPreview" style="
+                                    width:32px;height:32px;border-radius:50%;
+                                    border:2px solid rgba(255,255,255,0.15);
+                                    margin-left:auto;
+                                    background:hsl(${this.settings.hue || 220}, ${this.settings.saturation || 60}%, ${this.settings.lightness || 55}%);
+                                "></div>
+                                <button id="setting-clear-color" style="
+                                    padding:4px 10px;border-radius:6px;
+                                    border:1px solid rgba(255,255,255,0.1);
+                                    background:rgba(0,0,0,0.3);
+                                    color:rgba(200,230,255,0.6);
+                                    font-size:11px;cursor:pointer;margin-top:6px;
+                                ">Reset Color</button>
+                            </div>
+                            <!-- Saved Gallery -->
+                            <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
+                                <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">SAVED JELLYFISH</div>
+                                <div id="setting-gallery"></div>
+                                <div id="gallery-preview" style="
+                                    display:none;align-items:center;gap:8px;
+                                    padding:8px;background:rgba(0,0,0,0.2);
+                                    border-radius:8px;margin-top:8px;
+                                ">
+                                    <img id="gallery-preview-img" src="" style="width:48px;height:48px;border-radius:6px;object-fit:cover;">
+                                    <div style="font-size:11px;color:rgba(200,230,255,0.6);">
+                                        <div id="gallery-preview-prompt"></div>
+                                        <button id="gallery-preview-load" style="
+                                            margin-top:4px;padding:3px 10px;border-radius:4px;
+                                            border:1px solid rgba(106,184,255,0.3);
+                                            background:rgba(106,184,255,0.1);
+                                            color:#6ab8ff;font-size:11px;cursor:pointer;
+                                        ">Load into Scene</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="cnidaria-setting-row">
                             <span>Export Analytics</span>
@@ -165,7 +239,7 @@
                         <div id="analytics-container"></div>
                     </div>
                     <div class="cnidaria-settings-footer">
-                        <span class="cnidaria-version">Cnidaria v1.2</span>
+                        <span class="cnidaria-version">Cnidaria v4.0</span>
                     </div>
                 </div>
             `;
@@ -259,6 +333,91 @@
                 modelSelect.addEventListener('change', e => {
                     this.settings.imageModel = e.target.value;
                     this._save();
+                });
+            }
+
+            // ─── Deluxe Color Selector wiring ───
+            const hueInput = this.dom.panel.querySelector('#setting-hue');
+            const satInput = this.dom.panel.querySelector('#setting-saturation');
+            const litInput = this.dom.panel.querySelector('#setting-lightness');
+            const colorPreview = this.dom.panel.querySelector('#colorPreview');
+            const clearColorBtn = this.dom.panel.querySelector('#setting-clear-color');
+
+            function updateColorPreview() {
+                if (!colorPreview) return;
+                const h = parseInt(hueInput ? hueInput.value : 220, 10);
+                const s = parseInt(satInput ? satInput.value : 60, 10);
+                const l = parseInt(litInput ? litInput.value : 55, 10);
+                colorPreview.style.background = `hsl(${h}, ${s}%, ${l}%)`;
+            }
+
+            if (hueInput) {
+                hueInput.addEventListener('input', e => {
+                    this.settings.hue = parseInt(e.target.value, 10);
+                    updateColorPreview();
+                    this._emit('colorchange', { h: this.settings.hue, s: this.settings.saturation || 60, l: this.settings.lightness || 55 });
+                    this._save();
+                });
+            }
+            if (satInput) {
+                satInput.addEventListener('input', e => {
+                    this.settings.saturation = parseInt(e.target.value, 10);
+                    updateColorPreview();
+                    this._emit('colorchange', { h: this.settings.hue || 220, s: this.settings.saturation, l: this.settings.lightness || 55 });
+                    this._save();
+                });
+            }
+            if (litInput) {
+                litInput.addEventListener('input', e => {
+                    this.settings.lightness = parseInt(e.target.value, 10);
+                    updateColorPreview();
+                    this._emit('colorchange', { h: this.settings.hue || 220, s: this.settings.saturation || 60, l: this.settings.lightness });
+                    this._save();
+                });
+            }
+            if (clearColorBtn) {
+                clearColorBtn.addEventListener('click', () => {
+                    this.settings.hue = 220;
+                    this.settings.saturation = 60;
+                    this.settings.lightness = 55;
+                    if (hueInput) hueInput.value = 220;
+                    if (satInput) satInput.value = 60;
+                    if (litInput) litInput.value = 55;
+                    updateColorPreview();
+                    this._emit('colorclear', {});
+                    this._save();
+                });
+            }
+
+            // ─── Saved Gallery wiring ───
+            const galleryContainer = this.dom.panel.querySelector('#setting-gallery');
+            const previewWrap = this.dom.panel.querySelector('#gallery-preview');
+            const previewImg = this.dom.panel.querySelector('#gallery-preview-img');
+            const previewPrompt = this.dom.panel.querySelector('#gallery-preview-prompt');
+            const previewLoadBtn = this.dom.panel.querySelector('#gallery-preview-load');
+
+            if (galleryContainer && typeof JellyfishImageGenerator !== 'undefined') {
+                JellyfishImageGenerator.renderGallery(
+                    galleryContainer,
+                    (dataUrl, metadata) => {
+                        // onLoad: show preview
+                        if (previewImg) previewImg.src = dataUrl;
+                        if (previewPrompt) previewPrompt.textContent = (metadata && metadata.prompt) ? metadata.prompt.substring(0, 40) + '...' : 'Saved jellyfish';
+                        if (previewWrap) previewWrap.style.display = 'flex';
+                        this._pendingGalleryUrl = dataUrl;
+                    },
+                    (id) => {
+                        // onDelete: hide preview if open
+                        if (previewWrap) previewWrap.style.display = 'none';
+                    }
+                );
+            }
+
+            if (previewLoadBtn) {
+                previewLoadBtn.addEventListener('click', () => {
+                    if (this._pendingGalleryUrl) {
+                        this._emit('galleryload', this._pendingGalleryUrl);
+                    }
                 });
             }
 
