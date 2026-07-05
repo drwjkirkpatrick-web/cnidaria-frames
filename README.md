@@ -43,30 +43,24 @@ python3 ws_server.py
 | `w` | Toggle storm mode |
 | `p` | Trigger plankton bloom |
 
-## Features (v2.0)
+## Features (v3.0)
 
-- **Advanced vector-based jellyfish** with superellipsoid bell geometry, B-spline tentacles, radial grooves, and oral-arm fronds
-- **Proper centering** in both landscape and portrait using CSS pixel coordinates
-- **Visible bottom toolbar** with 6 icon buttons (prev, next, theme, audio, screenshot, settings)
+- **Single AI-generated jellyfish** — one image-based medusa per session, properly bounded to screen
+- **Image generation toolbar** with Generate, Variation, Save buttons (bottom of screen)
+- **Settings panel** with custom prompt text input, style selector (vector/animation/neon/botanical/crystal/organic), lighting selector, and model dropdown (FLUX 2 Klein/Dev/Pro)
+- **Prompt builder** with vector-animation nudges: "clean geometric lines, flat colors, no photorealism, no 3D render, 2D vector illustration"
+- **8 pre-generated variants** in `assets/jellyfish-variants/` (moon, neon, pastel, box, comb, crystal, amber, lion's mane)
+- **localStorage save** for generated jellyfish with metadata
 - **Seafloor terrain** with parallax scrolling
-- **Touch-drag steering** of the primary jellyfish
-- **Manta ray companion** with bioluminescent trail
+- **Touch-drag steering** of the jellyfish
 - **Plankton bloom** events (dense drifting clouds)
-- **Meditation breathing guide** synced to jellyfish pulse
 - **Storm mode** with lightning flashes and procedural thunder
-- **Color-blind accessible** theme variants (protanopia, deuteranopia, tritanopia)
+- **Color-blind accessible** theme variants
 - **Achievement/badge system** with localStorage persistence
 - **Export analytics** as JSON download
 - **Keyboard help overlay** (`?`)
-- **Microphone audio reactivity** (drives pulse amplitude)
-- **Jellyfish lifecycle** — grow and split via mitosis
-- **Shareable URLs** via URL hash encoding
-- **Water current meter** affecting drift
-- **Coral reef formations** on seafloor
-- **Changelog/version history** modal
 - **Auto-dark mode** by time of day
 - **Touch ripple** effect on water surface
-- **Idle behaviors** (spin, dive, surface, drift)
 
 ### v1.2 Features
 
@@ -114,8 +108,8 @@ python3 ws_server.py
 
 ```
 cnidaria-frames/
-├── index.html              # Entry point (22 script modules + toolbar)
-├── css/jellyfish.css       # All styles + toolbar + v1.3 overlays
+├── index.html              # Entry point (script modules + toolbar + preview overlay)
+├── css/jellyfish.css       # All styles + toolbar + overlays
 ├── manifest.json           # PWA manifest
 ├── sw.js                   # Service worker (stale-while-revalidate)
 ├── server.py               # HTTP dev server (port 9191)
@@ -123,10 +117,20 @@ cnidaria-frames/
 ├── assets/
 │   ├── icon-192.png
 │   ├── icon-512.png
-│   └── apple-touch-icon.png
+│   ├── apple-touch-icon.png
+│   └── jellyfish-variants/ # 8 AI-generated vector jellyfish images
+│       ├── jellyfish-01.png
+│       ├── jellyfish-02.png
+│       ├── jellyfish-03.png
+│       ├── jellyfish-04.png
+│       ├── jellyfish-05.png
+│       ├── jellyfish-06.png
+│       ├── jellyfish-07.png
+│       └── jellyfish-08.png
 └── js/
-    ├── main.js             # v1.3 orchestrator (all subsystems)
-    ├── jellyfish.js        # v2.0: superellipse bell, B-spline tentacles, grooves
+    ├── main.js             # v3.0 orchestrator (single image-based jellyfish + generator)
+    ├── jellyfish.js        # v3.0: single image-based jellyfish with screen bounds
+    ├── jellyfish-image-generator.js  # Prompt builder + variation logic + localStorage save
     ├── particles.js        # Bubbles + sparkles
     ├── gesture-handler.js  # Touch + keyboard
     ├── audio-engine.js     # Procedural ambient sound

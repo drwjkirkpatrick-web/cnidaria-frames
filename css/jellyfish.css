@@ -425,6 +425,69 @@ html, body {
     }
 }
 
+/* ─── Image Generation Preview Overlay ─── */
+.cnidaria-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: opacity 0.3s;
+}
+
+.cnidaria-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.cnidaria-overlay-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.cnidaria-overlay-content img {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    transition: opacity 0.3s;
+}
+
+.cnidaria-overlay-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.5);
+    color: #c8e6ff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 81;
+}
+
+.cnidaria-overlay-status {
+    color: rgba(200, 230, 255, 0.8);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+}
+
 /* ─── Screen Reader Only ─── */
 .sr-only {
     position: absolute;

@@ -24,7 +24,11 @@
                 showFPS: false,
                 theme: 'deep',
                 voice: false,
-                predators: true
+                predators: true,
+                jellyfishPrompt: '',
+                jellyfishStyle: 'vector',
+                jellyfishLighting: 'biolum',
+                imageModel: 'flux-2-klein'
             };
             this._load();
             this._buildDOM();
@@ -112,6 +116,43 @@
                             <input type="checkbox" id="setting-mic">
                             <span class="cnidaria-toggle-knob"></span>
                         </label>
+                        <!-- Image Generation Settings (v3.0) -->
+                        <div style="padding:12px 0;border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;">
+                            <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">JELLYFISH GENERATOR</div>
+                            <label class="cnidaria-setting-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+                                <span>Prompt</span>
+                                <input type="text" id="setting-prompt" placeholder="e.g. crystal moon" value="${this.settings.jellyfishPrompt}" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#c8e6ff;font-size:13px;">
+                            </label>
+                            <label class="cnidaria-setting-row">
+                                <span>Style</span>
+                                <select id="setting-style">
+                                    <option value="vector" ${this.settings.jellyfishStyle==='vector'?'selected':''}>Vector Illustration</option>
+                                    <option value="animated" ${this.settings.jellyfishStyle==='animated'?'selected':''}>Animation Cel</option>
+                                    <option value="neon" ${this.settings.jellyfishStyle==='neon'?'selected':''}>Neon Glow</option>
+                                    <option value="botanical" ${this.settings.jellyfishStyle==='botanical'?'selected':''}>Botanical</option>
+                                    <option value="crystal" ${this.settings.jellyfishStyle==='crystal'?'selected':''}>Crystal Geo</option>
+                                    <option value="organic" ${this.settings.jellyfishStyle==='organic'?'selected':''}>Organic Ink</option>
+                                </select>
+                            </label>
+                            <label class="cnidaria-setting-row">
+                                <span>Lighting</span>
+                                <select id="setting-lighting">
+                                    <option value="biolum" ${this.settings.jellyfishLighting==='biolum'?'selected':''}>Bioluminescent</option>
+                                    <option value="ambient" ${this.settings.jellyfishLighting==='ambient'?'selected':''}>Ambient Caustic</option>
+                                    <option value="neon_rim" ${this.settings.jellyfishLighting==='neon_rim'?'selected':''}>Neon Rim</option>
+                                    <option value="soft" ${this.settings.jellyfishLighting==='soft'?'selected':''}>Soft Diffused</option>
+                                    <option value="dark" ${this.settings.jellyfishLighting==='dark'?'selected':''}>Dark Silhouette</option>
+                                </select>
+                            </label>
+                            <label class="cnidaria-setting-row">
+                                <span>Model</span>
+                                <select id="setting-model">
+                                    <option value="flux-2-klein" ${this.settings.imageModel==='flux-2-klein'?'selected':''}>FLUX 2 Klein</option>
+                                    <option value="flux-2-dev" ${this.settings.imageModel==='flux-2-dev'?'selected':''}>FLUX 2 Dev</option>
+                                    <option value="flux-2-pro" ${this.settings.imageModel==='flux-2-pro'?'selected':''}>FLUX 2 Pro</option>
+                                </select>
+                            </label>
+                        </div>
                         <div class="cnidaria-setting-row">
                             <span>Export Analytics</span>
                             <button id="setting-export" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#c8e6ff;font-size:12px;cursor:pointer;">Download JSON</button>
@@ -187,6 +228,36 @@
                 themeSelect.addEventListener('change', e => {
                     this.settings.theme = e.target.value;
                     this._emit('themechange', this.settings.theme);
+                    this._save();
+                });
+            }
+
+            // v3.0 image generation settings
+            const promptInput = this.dom.panel.querySelector('#setting-prompt');
+            if (promptInput) {
+                promptInput.addEventListener('input', e => {
+                    this.settings.jellyfishPrompt = e.target.value;
+                    this._save();
+                });
+            }
+            const styleSelect = this.dom.panel.querySelector('#setting-style');
+            if (styleSelect) {
+                styleSelect.addEventListener('change', e => {
+                    this.settings.jellyfishStyle = e.target.value;
+                    this._save();
+                });
+            }
+            const lightingSelect = this.dom.panel.querySelector('#setting-lighting');
+            if (lightingSelect) {
+                lightingSelect.addEventListener('change', e => {
+                    this.settings.jellyfishLighting = e.target.value;
+                    this._save();
+                });
+            }
+            const modelSelect = this.dom.panel.querySelector('#setting-model');
+            if (modelSelect) {
+                modelSelect.addEventListener('change', e => {
+                    this.settings.imageModel = e.target.value;
                     this._save();
                 });
             }

@@ -23,13 +23,18 @@
     const netStatus = document.getElementById('netStatus');
     const netText = document.getElementById('netText');
     const ariaAnnouncer = document.getElementById('ariaAnnouncer');
-    // Toolbar buttons (v2.0)
-    const btnPrev = document.getElementById('btnPrev');
-    const btnNext = document.getElementById('btnNext');
+    // Toolbar buttons (v3.0)
+    const btnGenerate = document.getElementById('btnGenerate');
+    const btnVariation = document.getElementById('btnVariation');
+    const btnSave = document.getElementById('btnSave');
     const btnTheme = document.getElementById('btnTheme');
     const btnAudio = document.getElementById('btnAudio');
-    const btnCapture = document.getElementById('btnCapture');
     const btnSettings = document.getElementById('btnSettings');
+    // Image generation preview overlay
+    const imgPreview = document.getElementById('imgPreview');
+    const imgPreviewImg = document.getElementById('imgPreviewImg');
+    const imgPreviewClose = document.getElementById('imgPreviewClose');
+    const imgPreviewStatus = document.getElementById('imgPreviewStatus');
 
     // ─── Components ───
     let jellyfish, jellyfishSwarm = [];
@@ -159,9 +164,8 @@
             updateStatus(stateManager.getState());
         }
 
-        // Jellyfish swarm
-        createJellyfishSwarm();
-        lifecycle = new Lifecycle(jellyfishSwarm);
+        // Single jellyfish (v3.0 — image-based)
+        createSingleJellyfish();
 
         // Event wiring
         setupGestures();
@@ -174,10 +178,12 @@
         setupStateChangeEffects();
         setupTouchDrag();
         setupStormEvents();
+        setupImageGeneration();
 
         // UI events
-        if (btnPrev) btnPrev.addEventListener('click', () => goBackState());
-        if (btnNext) btnNext.addEventListener('click', () => cycleState());
+        if (btnGenerate) btnGenerate.addEventListener('click', () => generateJellyfishImage());
+        if (btnVariation) btnVariation.addEventListener('click', () => varyJellyfishImage());
+        if (btnSave) btnSave.addEventListener('click', () => saveCurrentJellyfish());
         if (btnTheme) btnTheme.addEventListener('click', () => {
             const newTheme = themeManager.cycle();
             currentTheme = themeManager.getTheme();
@@ -191,11 +197,19 @@
             audioEngine.isPlaying ? audioEngine.stop() : audioEngine.start();
             btnAudio.classList.toggle('active', audioEngine.isPlaying);
         });
-        if (btnCapture) btnCapture.addEventListener('click', () => {
-            SystemAPIs.exportScreenshot(canvas);
-            achievements.checkScreenshot();
-        });
         if (btnSettings) btnSettings.addEventListener('click', () => settingsPanel.open());
+
+        // Preview overlay close
+        if (imgPreviewClose) {
+            imgPreviewClose.addEventListener('click', () => {
+                imgPreview.classList.add('hidden');
+            });
+        }
+        if (imgPreview) {
+            imgPreview.addEventListener('click', (e) => {
+                if (e.target === imgPreview) imgPreview.classList.add('hidden');
+            });
+        }
 
         // Start animation
         requestAnimationFrame(animate);
@@ -211,32 +225,107 @@
         }
     }
 
-    // ─── Responsive swarm with personalities ───
-    function createJellyfishSwarm() {
-        jellyfishSwarm = [];
-        // Use CSS pixel dimensions (not canvas buffer size) for centering
+    // ─── Single jellyfish (v3.0 image-based) ───
+    function createSingleJellyfish() {
         const w = window.innerWidth;
         const h = window.innerHeight;
         const diag = Math.sqrt(w * w + h * h);
-        const baseScale = Utils.clamp(diag / 1200, 0.55, 1.4);
+        const baseScale = Utils.clamp(diag / 1200, 0.45, 1.2);
 
-        const leader = new Jellyfish(w / 2, h / 2, baseScale);
-        leader.personality = new Personality('leader');
-        leader.personality.apply(leader);
-        jellyfish = leader;
-        jellyfishSwarm.push(leader);
+        jellyfish = new Jellyfish(w / 2, h / 2, baseScale);
+        jellyfish.setBounds(w, h);
 
-        const count = (w * h) > 400000 ? 3 : (w * h) > 250000 ? 2 : 0;
-        for (let i = 0; i < count; i++) {
-            const jf = new Jellyfish(
-                w * 0.2 + Math.random() * w * 0.6,
-                h * 0.2 + Math.random() * h * 0.6,
-                baseScale * (0.5 + Math.random() * 0.4)
-            );
-            jf.personality = new Personality(Personality.random());
-            jf.personality.apply(jf);
-            jellyfishSwarm.push(jf);
+        // Load first available variant image
+        const variantIndex = Math.floor(Math.random() * 8) + 1;
+        const src = `assets/jellyfish-variants/jellyfish-${String(variantIndex).padStart(2, '0')}.png`;
+        jellyfish.setImage(src);
+
+        jellyfishSwarm = [jellyfish];
+    }
+
+    // ─── Generate new jellyfish image ───
+    let lastGeneratedPrompt = '';
+    let lastGeneratedUrl = '';
+
+    async function generateJellyfishImage() {
+        if (!imgPreview || !imgPreviewImg) return;
+
+        const settings = settingsPanel ? settingsPanel.getSettings() : {};
+        const userText = settings.jellyfishPrompt || '';
+        const styleKey = settings.jellyfishStyle || 'vector';
+        const lightingKey = settings.jellyfishLighting || 'biolum';
+
+        const built = JellyfishImageGenerator.buildPrompt(userText, styleKey, lightingKey);
+        lastGeneratedPrompt = built.prompt;
+
+        imgPreview.classList.remove('hidden');
+        imgPreviewStatus.textContent = 'Generating…';
+        imgPreviewImg.style.opacity = '0.3';
+
+        try {
+            // In a real app, this would call the FAL API endpoint.
+            // For this local build, we rotate through pre-generated variants
+            // and simulate the generation flow.
+            const variantIndex = Math.floor(Math.random() * 8) + 1;
+            const src = `assets/jellyfish-variants/jellyfish-${String(variantIndex).padStart(2, '0')}.png`;
+
+            const img = await JellyfishImageGenerator.preloadImage(src);
+            lastGeneratedUrl = src;
+
+            imgPreviewImg.src = src;
+            imgPreviewImg.style.opacity = '1';
+            imgPreviewStatus.textContent = 'Tap Apply to use this jellyfish';
+
+            // Auto-apply after short delay
+            setTimeout(() => {
+                applyJellyfishImage(src);
+                imgPreview.classList.add('hidden');
+            }, 1500);
+        } catch (err) {
+            console.error('Generation failed:', err);
+            imgPreviewStatus.textContent = 'Error. Try again.';
         }
+    }
+
+    function varyJellyfishImage() {
+        if (!lastGeneratedPrompt) {
+            generateJellyfishImage();
+            return;
+        }
+        const varied = JellyfishImageGenerator.varyPrompt(lastGeneratedPrompt);
+        lastGeneratedPrompt = varied;
+        // Re-trigger with varied prompt (for demo, cycle variants)
+        generateJellyfishImage();
+    }
+
+    function applyJellyfishImage(src) {
+        if (!jellyfish) return;
+        jellyfish.setImage(src);
+        if (achievements) achievements.checkGenerate();
+        if (analytics) analytics.logGenerate();
+        announceToScreenReader('New jellyfish applied');
+    }
+
+    function saveCurrentJellyfish() {
+        if (!jellyfish || !jellyfish.image || !lastGeneratedUrl) {
+            announceToScreenReader('Nothing to save yet');
+            return;
+        }
+        // Fetch and save to localStorage
+        fetch(lastGeneratedUrl)
+            .then(r => r.blob())
+            .then(blob => {
+                const meta = { prompt: lastGeneratedPrompt, date: new Date().toISOString() };
+                return JellyfishImageGenerator.saveImage(blob, meta);
+            })
+            .then(entry => {
+                announceToScreenReader('Jellyfish saved');
+                if (achievements) achievements.checkSave();
+            })
+            .catch(err => {
+                console.error('Save failed:', err);
+                announceToScreenReader('Save failed');
+            });
     }
 
     // ─── Canvas sizing ───
@@ -257,13 +346,7 @@
         if (jellyfish) {
             jellyfish.x = window.innerWidth / 2;
             jellyfish.y = window.innerHeight / 2;
-        }
-        // Recenter swarm members too
-        for (const jf of jellyfishSwarm) {
-            if (jf !== jellyfish) {
-                jf.x = Utils.clamp(jf.x, 60, window.innerWidth - 60);
-                jf.y = Utils.clamp(jf.y, 60, window.innerHeight - 60);
-            }
+            jellyfish.setBounds(window.innerWidth, window.innerHeight);
         }
     }
 
@@ -363,48 +446,31 @@
             touchRipple.draw(ctx);
         }
 
-        // Jellyfish swarm
+        // Single jellyfish (v3.0)
         const limbicParams = limbicBridge ? limbicBridge.getParams() : {};
         const currentState = stateManager ? stateManager.getState() : 'idle';
 
-        for (const jf of jellyfishSwarm) {
-            jf.setState(currentState);
+        if (jellyfish) {
+            jellyfish.setState(currentState);
 
-            // Audio reactivity modulates pulse
             if (micLevel > 0) {
-                jf.pulsePhase += micLevel * dt * 2;
+                jellyfish.pulsePhase += micLevel * dt * 2;
             }
 
-            jf.update(effectiveDt, now / 1000, limbicParams, settings.reducedMotion);
+            jellyfish.update(effectiveDt, now / 1000, limbicParams, settings.reducedMotion);
 
-            if (jf !== jellyfish && jellyfishSwarm.length > 1) {
-                jf.updateNeighbors(jellyfishSwarm, window.innerWidth, window.innerHeight);
-            }
-
-            // Apply theme color shift + lunar tint
             if (theme.jellyfishTint) {
-                jf.color.r = Utils.clamp(jf.color.r + theme.jellyfishTint.r, 0, 255);
-                jf.color.g = Utils.clamp(jf.color.g + theme.jellyfishTint.g, 0, 255);
-                jf.color.b = Utils.clamp(jf.color.b + theme.jellyfishTint.b, 0, 255);
+                jellyfish.color.r = Utils.clamp(jellyfish.color.r + theme.jellyfishTint.r, 0, 255);
+                jellyfish.color.g = Utils.clamp(jellyfish.color.g + theme.jellyfishTint.g, 0, 255);
+                jellyfish.color.b = Utils.clamp(jellyfish.color.b + theme.jellyfishTint.b, 0, 255);
             }
 
-            // Water current drift
-            if (waterCurrent && jf !== jellyfish) {
-                waterCurrent.apply(jf, effectiveDt);
-            }
-
-            jf.draw(ctx);
+            jellyfish.draw(ctx);
 
             if (particleSystem && !settings.reducedMotion) {
-                jf.emitSparkles(particleSystem, settings.reducedMotion);
+                jellyfish.emitSparkles(particleSystem, settings.reducedMotion);
             }
         }
-
-        // Idle behaviors
-        if (idleBehavior) idleBehavior.update(dt);
-
-        // Lifecycle (grow then split)
-        if (lifecycle) lifecycle.update(dt);
 
         // Breathing guide
         if (breathingGuide) breathingGuide.update(dt, jellyfish ? jellyfish.pulsePhase : 0);
