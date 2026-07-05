@@ -142,6 +142,20 @@ html, body {
     animation: splashPulse 1.2s ease-in-out infinite;
 }
 
+/* Fallback: hide splash after 5s even if JS fails */
+#splashScreen {
+    animation: splashAutoHide 0.6s ease 5s forwards;
+    animation-play-state: paused;
+}
+
+#splashScreen.js-loaded {
+    animation-play-state: running;
+}
+
+@keyframes splashAutoHide {
+    to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
 @keyframes splashPulse {
     0% { transform: scale(0.8); opacity: 0.5; }
     50% { transform: scale(1.2); opacity: 1; }

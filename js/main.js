@@ -52,11 +52,21 @@
 
     // ─── Initialize ───
     function init() {
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        // Mark JS as loaded for CSS fallback
+        if (splashScreen) {
+            splashScreen.classList.add('js-loaded');
+            // Tap-to-dismiss splash screen
+            splashScreen.addEventListener('click', () => {
+                splashScreen.classList.add('hidden');
+            }, { once: true });
+        }
 
-        // Lunar phase
-        lunarPhase = new LunarPhase();
+        try {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Lunar phase
+            lunarPhase = new LunarPhase();
 
         // Theme system
         themeManager = new ThemeManager();
@@ -169,6 +179,11 @@
 
         updateStatus('ready');
         announceToScreenReader('Cnidaria Frames ready. Press question mark for help.');
+        } catch (err) {
+            console.error('[Cnidaria] init error:', err);
+            // Still dismiss splash so user isn't stuck
+            if (splashScreen) splashScreen.classList.add('hidden');
+        }
     }
 
     // ─── Responsive swarm with personalities ───

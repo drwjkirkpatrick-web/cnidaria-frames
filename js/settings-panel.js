@@ -182,7 +182,7 @@
             });
 
             // Theme selector
-            const themeSelect = panel.querySelector('#setting-theme');
+            const themeSelect = this.dom.panel.querySelector('#setting-theme');
             if (themeSelect) {
                 themeSelect.addEventListener('change', e => {
                     this.settings.theme = e.target.value;
@@ -192,7 +192,7 @@
             }
 
             // Voice toggle
-            const voiceCb = panel.querySelector('#setting-voice');
+            const voiceCb = this.dom.panel.querySelector('#setting-voice');
             if (voiceCb) {
                 voiceCb.addEventListener('change', e => {
                     this.settings.voice = e.target.checked;
@@ -202,7 +202,7 @@
             }
 
             // Predator toggle
-            const predatorCb = panel.querySelector('#setting-predators');
+            const predatorCb = this.dom.panel.querySelector('#setting-predators');
             if (predatorCb) {
                 predatorCb.addEventListener('change', e => {
                     this.settings.predators = e.target.checked;
@@ -212,7 +212,7 @@
             }
 
             // Fullscreen toggle
-            const fsCb = panel.querySelector('#setting-fullscreen');
+            const fsCb = this.dom.panel.querySelector('#setting-fullscreen');
             if (fsCb) {
                 fsCb.addEventListener('change', e => {
                     if (e.target.checked) {
@@ -224,31 +224,31 @@
             }
 
             // v1.3 settings
-            const stormCb = panel.querySelector('#setting-storm');
+            const stormCb = this.dom.panel.querySelector('#setting-storm');
             if (stormCb) {
                 stormCb.addEventListener('change', e => {
                     this._emit('stormchange', e.target.checked);
                 });
             }
-            const breathingCb = panel.querySelector('#setting-breathing');
+            const breathingCb = this.dom.panel.querySelector('#setting-breathing');
             if (breathingCb) {
                 breathingCb.addEventListener('change', e => {
                     this._emit('breathingchange', e.target.checked);
                 });
             }
-            const micCb = panel.querySelector('#setting-mic');
+            const micCb = this.dom.panel.querySelector('#setting-mic');
             if (micCb) {
                 micCb.addEventListener('change', e => {
                     this._emit('micchange', e.target.checked);
                 });
             }
-            const exportBtn = panel.querySelector('#setting-export');
+            const exportBtn = this.dom.panel.querySelector('#setting-export');
             if (exportBtn) {
                 exportBtn.addEventListener('click', () => {
                     this._emit('exportanalytics', {});
                 });
             }
-            const changelogBtn = panel.querySelector('#setting-changelog');
+            const changelogBtn = this.dom.panel.querySelector('#setting-changelog');
             if (changelogBtn) {
                 changelogBtn.addEventListener('click', () => {
                     this._emit('showchangelog', {});
@@ -257,14 +257,16 @@
 
             // Analytics rendering hook
             this._renderAnalytics = () => {
-                const container = panel.querySelector('#analytics-container');
-                const badgesContainer = panel.querySelector('#badges-container');
-                if (badgesContainer && window.Achievements) {
+                const container = this.dom.panel.querySelector('#analytics-container');
+                const badgesContainer = this.dom.panel.querySelector('#badges-container');
+                if (badgesContainer && typeof Achievements !== 'undefined') {
                     const ach = new Achievements();
                     badgesContainer.innerHTML = ach.renderBadges();
                 }
-                if (!container || !window.Cnidaria || !window.Cnidaria.analytics) return;
-                container.innerHTML = window.Cnidaria.analytics.renderTable();
+                if (!container) return;
+                if (typeof SessionAnalytics === 'undefined') return;
+                const analytics = new SessionAnalytics();
+                container.innerHTML = analytics.renderTable();
             };
         }
 
