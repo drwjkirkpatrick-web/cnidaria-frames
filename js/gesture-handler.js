@@ -163,6 +163,15 @@
                 case 's':
                     this._dispatch('opensettings', {});
                     break;
+                case 'e':
+                    this._dispatch('exportscreenshot', {});
+                    break;
+                case 't':
+                    this._dispatch('toggletheme', {});
+                    break;
+                case 'v':
+                    this._dispatch('togglevoice', {});
+                    break;
             }
         }
 

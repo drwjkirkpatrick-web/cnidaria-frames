@@ -17,11 +17,14 @@
             this.isOpen = false;
             this.settings = {
                 volume: 0.15,
-                particles: 'medium', // low, medium, high
+                particles: 'medium',
                 motionSensitivity: 0.5,
                 screensaver: true,
                 reducedMotion: false,
-                showFPS: false
+                showFPS: false,
+                theme: 'deep',
+                voice: false,
+                predators: true
             };
             this._load();
             this._buildDOM();
@@ -57,6 +60,15 @@
                             </select>
                         </label>
                         <label class="cnidaria-setting-row">
+                            <span>Theme</span>
+                            <select id="setting-theme">
+                                <option value="deep" ${this.settings.theme==='deep'?'selected':''}>Deep Ocean</option>
+                                <option value="arctic" ${this.settings.theme==='arctic'?'selected':''}>Arctic</option>
+                                <option value="reef" ${this.settings.theme==='reef'?'selected':''}>Coral Reef</option>
+                                <option value="abyss" ${this.settings.theme==='abyss'?'selected':''}>Abyss</option>
+                            </select>
+                        </label>
+                        <label class="cnidaria-setting-row">
                             <span>Motion Sensitivity</span>
                             <input type="range" id="setting-motion" min="0" max="1" step="0.1" value="${this.settings.motionSensitivity}">
                         </label>
@@ -75,9 +87,25 @@
                             <input type="checkbox" id="setting-reduced" ${this.settings.reducedMotion?'checked':''}>
                             <span class="cnidaria-toggle-knob"></span>
                         </label>
+                        <label class="cnidaria-setting-row cnidaria-toggle">
+                            <span>Voice Commands</span>
+                            <input type="checkbox" id="setting-voice" ${this.settings.voice?'checked':''}>
+                            <span class="cnidaria-toggle-knob"></span>
+                        </label>
+                        <label class="cnidaria-setting-row cnidaria-toggle">
+                            <span>Predators</span>
+                            <input type="checkbox" id="setting-predators" ${this.settings.predators!==false?'checked':''}>
+                            <span class="cnidaria-toggle-knob"></span>
+                        </label>
+                        <label class="cnidaria-setting-row cnidaria-toggle">
+                            <span>Fullscreen</span>
+                            <input type="checkbox" id="setting-fullscreen">
+                            <span class="cnidaria-toggle-knob"></span>
+                        </label>
+                        <div id="analytics-container"></div>
                     </div>
                     <div class="cnidaria-settings-footer">
-                        <span class="cnidaria-version">Cnidaria v1.1</span>
+                        <span class="cnidaria-version">Cnidaria v1.2</span>
                     </div>
                 </div>
             `;
@@ -133,6 +161,55 @@
                 this._emit('reducedmotionchange', this.settings.reducedMotion);
                 this._save();
             });
+
+            // Theme selector
+            const themeSelect = panel.querySelector('#setting-theme');
+            if (themeSelect) {
+                themeSelect.addEventListener('change', e => {
+                    this.settings.theme = e.target.value;
+                    this._emit('themechange', this.settings.theme);
+                    this._save();
+                });
+            }
+
+            // Voice toggle
+            const voiceCb = panel.querySelector('#setting-voice');
+            if (voiceCb) {
+                voiceCb.addEventListener('change', e => {
+                    this.settings.voice = e.target.checked;
+                    this._emit('voicechange', this.settings.voice);
+                    this._save();
+                });
+            }
+
+            // Predator toggle
+            const predatorCb = panel.querySelector('#setting-predators');
+            if (predatorCb) {
+                predatorCb.addEventListener('change', e => {
+                    this.settings.predators = e.target.checked;
+                    this._emit('predatorchange', this.settings.predators);
+                    this._save();
+                });
+            }
+
+            // Fullscreen toggle
+            const fsCb = panel.querySelector('#setting-fullscreen');
+            if (fsCb) {
+                fsCb.addEventListener('change', e => {
+                    if (e.target.checked) {
+                        document.dispatchEvent(new CustomEvent('cnidaria:fullscreen:request'));
+                    } else {
+                        document.dispatchEvent(new CustomEvent('cnidaria:fullscreen:exit'));
+                    }
+                });
+            }
+
+            // Analytics rendering hook
+            this._renderAnalytics = () => {
+                const container = panel.querySelector('#analytics-container');
+                if (!container || !window.Cnidaria || !window.Cnidaria.analytics) return;
+                container.innerHTML = window.Cnidaria.analytics.renderTable();
+            };
         }
 
         open() {
@@ -140,6 +217,7 @@
             this.isOpen = true;
             this.dom.panel.classList.add('open');
             document.body.style.overflow = 'hidden';
+            if (this._renderAnalytics) this._renderAnalytics();
         }
 
         close() {
