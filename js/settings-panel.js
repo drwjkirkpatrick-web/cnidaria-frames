@@ -32,7 +32,10 @@
                 hue: 220,
                 saturation: 60,
                 lightness: 55,
-                fullscreen: false
+                fullscreen: false,
+                personality: 'majestic',
+                timing: 'normal',
+                pacingEnabled: true,
             };
             this._load();
             this._buildDOM();
@@ -204,6 +207,37 @@
                                     color:rgba(200,230,255,0.6);
                                     font-size:11px;cursor:pointer;margin-top:6px;
                                 ">Reset Color</button>
+                            </div>
+                            <!-- Animation Engine Controls -->
+                            <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
+                                <div style="font-size:12px;color:rgba(200,230,255,0.5);letter-spacing:0.05em;margin-bottom:8px;">ANIMATION ENGINE</div>
+                                <label class="cnidaria-setting-row">
+                                    <span>Personality</span>
+                                    <select id="setting-personality">
+                                        <option value="shy" ${this.settings.personality==='shy'?'selected':''}>Shy — subtle, gentle</option>
+                                        <option value="curious" ${this.settings.personality==='curious'?'selected':''}>Curious — energetic, playful</option>
+                                        <option value="majestic" ${this.settings.personality==='majestic'?'selected':''}>Majestic — balanced, grand</option>
+                                    </select>
+                                </label>
+                                <label class="cnidaria-setting-row">
+                                    <span>Timing</span>
+                                    <select id="setting-timing">
+                                        <option value="slow" ${this.settings.timing==='slow'?'selected':''}>Drifting — slow, meditative</option>
+                                        <option value="normal" ${this.settings.timing==='normal'?'selected':''}>Flowing — balanced</option>
+                                        <option value="energetic" ${this.settings.timing==='energetic'?'selected':''}>Pulsing — fast, lively</option>
+                                    </select>
+                                </label>
+                                <label class="cnidaria-setting-row cnidaria-toggle">
+                                    <span>Auto Mood Cycle</span>
+                                    <input type="checkbox" id="setting-pacing" ${this.settings.pacingEnabled ? 'checked' : ''}>
+                                    <span class="cnidaria-toggle-knob"></span>
+                                </label>
+                                <button id="setting-anticipation" style="
+                                    padding:6px 14px;border-radius:6px;
+                                    border:1px solid rgba(106,184,255,0.3);
+                                    background:rgba(106,184,255,0.1);
+                                    color:#6ab8ff;font-size:11px;cursor:pointer;margin-top:6px;
+                                ">Trigger Anticipation</button>
                             </div>
                             <!-- Saved Gallery -->
                             <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
@@ -418,6 +452,38 @@
                     if (this._pendingGalleryUrl) {
                         this._emit('galleryload', this._pendingGalleryUrl);
                     }
+                });
+            }
+
+            // ─── v5.0 Animation Engine wiring ───
+            const personalitySelect = this.dom.panel.querySelector('#setting-personality');
+            if (personalitySelect) {
+                personalitySelect.addEventListener('change', e => {
+                    this.settings.personality = e.target.value;
+                    this._emit('personalitychange', e.target.value);
+                    this._save();
+                });
+            }
+            const timingSelect = this.dom.panel.querySelector('#setting-timing');
+            if (timingSelect) {
+                timingSelect.addEventListener('change', e => {
+                    this.settings.timing = e.target.value;
+                    this._emit('timingchange', e.target.value);
+                    this._save();
+                });
+            }
+            const pacingCb = this.dom.panel.querySelector('#setting-pacing');
+            if (pacingCb) {
+                pacingCb.addEventListener('change', e => {
+                    this.settings.pacingEnabled = e.target.checked;
+                    this._emit('pacingchange', e.target.checked);
+                    this._save();
+                });
+            }
+            const anticipationBtn = this.dom.panel.querySelector('#setting-anticipation');
+            if (anticipationBtn) {
+                anticipationBtn.addEventListener('click', () => {
+                    this._emit('anticipation', {});
                 });
             }
 

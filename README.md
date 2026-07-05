@@ -43,36 +43,30 @@ python3 ws_server.py
 | `w` | Toggle storm mode |
 | `p` | Trigger plankton bloom |
 
-## Features (v4.0)
+## Features (v5.0)
 
-- **Procedurally animated jellyfish** from a single still frame — uses vertical slice-warping
-  to create flowing tentacle motion, breath pulse, and bell expansion without needing
-  a sprite sheet
-- **Full-viewport background** — depth-of-field gradient extends beyond corners, no
-  boundary edges visible during movement
-- **17 AI image models** via Nous Research / FAL.ai, organized by category in optgroups:
-  FLUX (7 models), Text & Brand (4), Specialty (6)
-- **Deluxe color selector** in settings — Hue/Saturation/Lightness sliders with live
-  preview circle, applies directly to jellyfish glow and tint
-- **Saved jellyfish gallery** — 3×3 grid of saved images with date, one-click load,
-  delete, and preview panel
-- **Labeled toolbar** buttons with keyboard shortcuts shown in tooltips (G, V, S, t, a, s)
-- **Tab visibility pause** — animation and audio stop when tab is hidden to save battery
-- **Smooth re-centering** on resize with lerp interpolation
+- **12 Principles of Animation** implemented for still-frame jellyfish:
+  - **Squash & Stretch** — bell compresses/expands with volume conservation (W×H constant)
+  - **Anticipation** — brief shrink before major movements (triggerable in settings)
+  - **Staging** — silhouette, lighting focus, glow follows personality
+  - **Follow Through & Overlapping Action** — spring-based tentacle physics (8 slices with lag)
+  - **Slow In & Slow Out** — eased sine interpolation, lerp-based repositioning
+  - **Arcs** — curved drift paths (not linear), wave-pattern vertical floating
+  - **Secondary Action** — ambient plankton particles drifting from bell
+  - **Timing** — three presets: Drifting (0.4×), Flowing (1×), Pulsing (2×)
+  - **Exaggeration** — personality modes: Shy (subtle), Curious (energetic), Majestic (balanced)
+  - **Solid Drawing** — volume conservation during squash, sliced tentacle rendering
+  - **Appeal** — micro-expressions (blink, tentacle twitch) for subtle performance
+- **Scene pacing / mood cycles** — auto-cycles through calm→curious→majestic→drifting
+  every 15 seconds, switching personality automatically
+- **Procedurally animated jellyfish** from a single still frame — vertical slice-warping
+- **Full-viewport background** — DOF gradient extends beyond corners
+- **17 AI image models** via Nous Research / FAL.ai (FLUX, Ideogram, Recraft, SDXL, etc.)
+- **Deluxe color selector** — HSL sliders with live preview
+- **Saved jellyfish gallery** — 3×3 grid with load/delete/preview
+- **Labeled toolbar** with keyboard shortcuts (G, V, S, t, a, s)
+- **Tab visibility pause** for battery saving
 - **Toast notifications** for save/load feedback
-- **Loading spinner** and **error fallback** on image load
-- **Single AI-generated jellyfish** — one image-based medusa per session, properly bounded to screen
-- **Image generation toolbar** with Generate, Variation, Save buttons (bottom of screen)
-- **Settings panel** with custom prompt text input, style selector, lighting selector, model dropdown
-- **Prompt builder** with vector-animation nudges: "clean geometric lines, flat colors, no photorealism"
-- **8 pre-generated variants** in `assets/jellyfish-variants/`
-- **localStorage save** for generated jellyfish with metadata
-- **Seafloor terrain** with parallax scrolling
-- **Touch-drag steering** of the jellyfish
-- **Plankton bloom** events (dense drifting clouds)
-- **Storm mode** with lightning flashes and procedural thunder
-- **Color-blind accessible** theme variants
-- **Achievement/badge system** with localStorage persistence
 - **Export analytics** as JSON download
 - **Keyboard help overlay** (`?`)
 - **Auto-dark mode** by time of day
@@ -144,9 +138,10 @@ cnidaria-frames/
 │       ├── jellyfish-07.png
 │       └── jellyfish-08.png
 └── js/
-    ├── main.js             # v3.0 orchestrator (single image-based jellyfish + generator)
-    ├── jellyfish.js        # v3.0: single image-based jellyfish with screen bounds
-    ├── jellyfish-image-generator.js  # Prompt builder + variation logic + localStorage save
+    ├── main.js             # v5.0 orchestrator (professional animation + generator)
+    ├── jellyfish.js        # v5.0: single image-based jellyfish with animator integration
+    ├── jellyfish-animator.js  # v5.0: 12 Principles of Animation engine (spring physics, arcs, squash, micro-expressions)
+    ├── jellyfish-image-generator.js  # Prompt builder + variation logic + localStorage save + gallery
     ├── particles.js        # Bubbles + sparkles
     ├── gesture-handler.js  # Touch + keyboard
     ├── audio-engine.js     # Procedural ambient sound

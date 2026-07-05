@@ -250,7 +250,9 @@
         }
     }
 
-    // ─── Single jellyfish (v3.0 image-based) ───
+    // ─── Single jellyfish (v5.0 with professional animator) ───
+    let jellyfishAnimator = null;
+
     function createSingleJellyfish() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -259,6 +261,14 @@
 
         jellyfish = new Jellyfish(w / 2, h / 2, baseScale);
         jellyfish.setBounds(w, h);
+
+        // Wire up professional animation engine
+        if (typeof JellyfishAnimator !== 'undefined') {
+            jellyfishAnimator = new JellyfishAnimator(jellyfish);
+            jellyfishAnimator.setPersonality('majestic');
+            jellyfishAnimator.setTiming('normal');
+            jellyfish.setAnimator(jellyfishAnimator);
+        }
 
         // Load first available variant image
         const variantIndex = Math.floor(Math.random() * 8) + 1;
@@ -801,6 +811,20 @@
                 jellyfish.setImage(url);
                 showToast('Gallery jellyfish loaded', 'success');
             }
+        });
+
+        // v5.0 animation engine settings
+        document.addEventListener('cnidaria:setting:personalitychange', e => {
+            if (jellyfishAnimator) jellyfishAnimator.setPersonality(e.detail);
+        });
+        document.addEventListener('cnidaria:setting:timingchange', e => {
+            if (jellyfishAnimator) jellyfishAnimator.setTiming(e.detail);
+        });
+        document.addEventListener('cnidaria:setting:pacingchange', e => {
+            if (jellyfishAnimator) jellyfishAnimator.setPacingCycle(e.detail);
+        });
+        document.addEventListener('cnidaria:setting:anticipation', () => {
+            if (jellyfishAnimator) jellyfishAnimator.triggerAnticipation(0.4);
         });
     }
 
