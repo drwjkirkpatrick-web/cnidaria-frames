@@ -48,7 +48,7 @@ def check_server():
         time.sleep(2)
         
         # Check if it's running
-        response = requests.get("http://localhost:8282/", timeout=5)
+        response = requests.get("http://localhost:9090/", timeout=5)
         if response.status_code == 200:
             print("✅ Server is running correctly")
             success = True
@@ -81,7 +81,7 @@ def main():
         print("\n🎉 All checks passed! Cnidaria Frames is ready to use.")
         print("\nTo start the server, run:")
         print("  ./start.sh")
-        print("\nThen open http://localhost:8282 in your browser")
+        print("\nThen open http://localhost:9090 in your browser")
         return 0
     else:
         print("\n❌ Some checks failed. Please review the errors above.")

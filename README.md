@@ -16,14 +16,14 @@ A minimalist jellyfish agent for Hermes, designed to run on small screens like i
 
 1. Clone the repository
 2. Run `./start.sh` to start the server
-3. Open `http://localhost:8282` in a browser
+3. Open `http://localhost:9090` in a browser
 4. Tap the toggle button to cycle through jellyfish states
 
 ### Manual Start
 
 1. Clone the repository
 2. Run `python3 server.py` to start the server
-3. Open `http://localhost:8282` in a browser
+3. Open `http://localhost:9090` in a browser
 4. Tap the toggle button to cycle through jellyfish states
 
 ## Technical Details
@@ -46,10 +46,10 @@ To access this agent through Tailscale:
 Example using Python's built-in server:
 ```bash
 cd ~/projects/cnidaria-frames
-python3 -m http.server 8282
+python3 -m http.server 9090
 ```
 
-Then access via: `http://[tailscale-ip]:8282`
+Then access via: `http://[tailscale-ip]:9090`
 
 ## States
 
