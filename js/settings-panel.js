@@ -182,7 +182,25 @@
                                         <option value="playground-2-5" ${this.settings.imageModel==='playground-2-5'?'selected':''}>Playground v2.5 — Photoreal</option>
                                         <option value="hyper-sd" ${this.settings.imageModel==='hyper-sd'?'selected':''}>Hyper-SD — Extreme speed</option>
                                     </optgroup>
+                                    <optgroup label="Local Ollama" id="ollama-model-group">
+                                        <option value="gemma2:2b" ${this.settings.imageModel==='gemma2:2b'?'selected':''}>Gemma 2 — 2B · Fast</option>
+                                        <option value="phi3:3.8b" ${this.settings.imageModel==='phi3:3.8b'?'selected':''}>Phi-3 — 3.8B · Balanced</option>
+                                        <option value="qwen2.5:3b" ${this.settings.imageModel==='qwen2.5:3b'?'selected':''}>Qwen 2.5 — 3B · Reasoning</option>
+                                        <option value="llama3.2:3b" ${this.settings.imageModel==='llama3.2:3b'?'selected':''}>Llama 3.2 — 3B · General</option>
+                                        <option value="qwen2.5-cpu" ${this.settings.imageModel==='qwen2.5-cpu'?'selected':''}>Qwen 2.5 CPU — CPU offload</option>
+                                    </optgroup>
                                 </select>
+                                <button id="setting-refresh-ollama" style="
+                                    margin-top:6px;padding:4px 10px;border-radius:6px;
+                                    border:1px solid rgba(106,184,255,0.3);
+                                    background:rgba(106,184,255,0.1);
+                                    color:#6ab8ff;font-size:11px;cursor:pointer;
+                                    display:flex;align-items:center;gap:4px;
+                                " title="Query local Ollama server">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                    Refresh Local Models
+                                </button>
+                                <div id="ollama-status" style="font-size:11px;color:rgba(200,230,255,0.4);margin-top:4px;display:none;"></div>
                             </label>
                             <!-- Deluxe Color Selector -->
                             <div style="padding-top:8px;">
@@ -378,7 +396,7 @@
                         <div id="analytics-container"></div>
                     </div>
                     <div class="cnidaria-settings-footer">
-                        <span class="cnidaria-version">Cnidaria v4.0</span>
+                        <span class="cnidaria-version">Cnidaria v6.1</span>
                     </div>
                 </div>
             `;
@@ -472,6 +490,57 @@
                 modelSelect.addEventListener('change', e => {
                     this.settings.imageModel = e.target.value;
                     this._save();
+                });
+            }
+
+            // ─── Local Ollama refresh button ───
+            const refreshOllamaBtn = this.dom.panel.querySelector('#setting-refresh-ollama');
+            const ollamaStatus = this.dom.panel.querySelector('#ollama-status');
+            if (refreshOllamaBtn) {
+                refreshOllamaBtn.addEventListener('click', async () => {
+                    refreshOllamaBtn.disabled = true;
+                    refreshOllamaBtn.style.opacity = '0.5';
+                    if (ollamaStatus) {
+                        ollamaStatus.style.display = 'block';
+                        ollamaStatus.textContent = 'Querying localhost:11434…';
+                        ollamaStatus.style.color = 'rgba(200,230,255,0.5)';
+                    }
+                    try {
+                        const res = await fetch('http://localhost:11434/api/tags', { method: 'GET', signal: AbortSignal.timeout(5000) });
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        const data = await res.json();
+                        const models = (data.models || []).map(m => ({
+                            name: m.name,
+                            size: m.size ? (m.size / 1e9).toFixed(1) + ' GB' : '?'
+                        }));
+                        if (models.length === 0) throw new Error('No models found');
+                        // Rebuild the Local Ollama optgroup safely
+                        const group = this.dom.panel.querySelector('#ollama-model-group');
+                        if (group) {
+                            // Clear existing options safely (no innerHTML to avoid XSS false-positives)
+                            while (group.firstChild) group.removeChild(group.firstChild);
+                            models.forEach(m => {
+                                const opt = document.createElement('option');
+                                opt.value = m.name;
+                                opt.textContent = m.name + ' · ' + m.size;
+                                if (this.settings.imageModel === m.name) opt.selected = true;
+                                group.appendChild(opt);
+                            });
+                        }
+                        if (ollamaStatus) {
+                            ollamaStatus.textContent = `Found ${models.length} model(s) on localhost:11434`;
+                            ollamaStatus.style.color = '#88ff88';
+                        }
+                    } catch (err) {
+                        if (ollamaStatus) {
+                            ollamaStatus.textContent = 'Ollama not reachable: ' + err.message;
+                            ollamaStatus.style.color = '#ff8888';
+                        }
+                    } finally {
+                        refreshOllamaBtn.disabled = false;
+                        refreshOllamaBtn.style.opacity = '1';
+                        setTimeout(() => { if (ollamaStatus) ollamaStatus.style.display = 'none'; }, 4000);
+                    }
                 });
             }
 
