@@ -1,12 +1,17 @@
 /**
- * main.js — Cnidaria Frames Main Controller v1.3
+ * main.js — Cnidaria Frames Main Controller v6.2
  *
- * Integrates all subsystems from v1.1 + v1.2 + v1.3:
+ * Integrates all subsystems from v1.1 + v1.2 + v1.3 + v6.2:
  *   v1.1: particles, audio, flocking, gestures, settings, PWA, perf overlay
  *   v1.2: themes, food, predators, voice, sync, lunar, caustics
  *   v1.3: seafloor, manta ray, plankton, breathing, storm, achievements,
  *         audio-reactive, lifecycle, URL state, water current, coral,
  *         help overlay, changelog, auto-dark, touch ripple, idle behavior
+ *   v6.2: Fixed critical button-wiring bug — JellyfishAnimator._initSprings()
+ *         was called before this.personality was defined, throwing a
+ *         TypeError that crashed init() before button listeners were attached.
+ *         Buttons now wired first via setupToolbarButtons(); added Help button
+ *         and visual feedback toasts on all toolbar actions.
  */
 
 (function() {
@@ -167,6 +172,13 @@
             updateStatus(stateManager.getState());
         }
 
+        // ── v6.2: Wire ALL toolbar buttons FIRST, before any subsystem that ──
+        // ── could throw. Previously, createSingleJellyfish() was called before  ──
+        // ── button wiring, and a TypeError in JellyfishAnimator._initSprings()   ──
+        // ── crashed init() before addEventListener lines ran — leaving every     ──
+        // ── button dead. Moving wiring up guarantees buttons always work.      ──
+        setupToolbarButtons();
+
         // Single jellyfish (v3.0 — image-based)
         createSingleJellyfish();
 
@@ -182,24 +194,7 @@
         setupTouchDrag();
         setupStormEvents();
 
-        // UI events
-        if (btnGenerate) btnGenerate.addEventListener('click', () => generateJellyfishImage());
-        if (btnVariation) btnVariation.addEventListener('click', () => varyJellyfishImage());
-        if (btnSave) btnSave.addEventListener('click', () => saveCurrentJellyfish());
-        if (btnTheme) btnTheme.addEventListener('click', () => {
-            const newTheme = themeManager.cycle();
-            currentTheme = themeManager.getTheme();
-            achievements.checkTheme(newTheme);
-            analytics.logTheme(newTheme);
-            autoDark.setManualOverride(true);
-            announceToScreenReader('Theme: ' + newTheme);
-        });
-        if (btnAudio) btnAudio.addEventListener('click', () => {
-            if (!audioEngine) return;
-            audioEngine.isPlaying ? audioEngine.stop() : audioEngine.start();
-            btnAudio.classList.toggle('active', audioEngine.isPlaying);
-        });
-        if (btnSettings) btnSettings.addEventListener('click', () => settingsPanel.open());
+        // UI events — moved to setupToolbarButtons() above (v6.2)
 
         // Preview overlay
         if (imgPreviewClose) {
@@ -248,6 +243,62 @@
             // Still dismiss splash so user isn't stuck
             if (splashScreen) splashScreen.classList.add('hidden');
         }
+    }
+
+    // ─── v6.2: Toolbar button wiring (robust, runs before subsystems) ───
+    // Extracted into its own function so it can be called early in init()
+    // — before createSingleJellyfish() and other potentially-throwing code.
+    // Each handler guards against missing subsystems so a later init failure
+    // in one module doesn't silently kill unrelated buttons.
+    function setupToolbarButtons() {
+        // Generate — new random jellyfish image variant
+        if (btnGenerate) btnGenerate.addEventListener('click', () => {
+            btnGenerate.classList.add('loading');
+            generateJellyfishImage().finally(() => {
+                btnGenerate.classList.remove('loading');
+            });
+        });
+
+        // Variation — create a variation of the current jellyfish
+        if (btnVariation) btnVariation.addEventListener('click', () => {
+            varyJellyfishImage();
+            showToast('Variation generated', 'info');
+        });
+
+        // Save — save current jellyfish to gallery
+        if (btnSave) btnSave.addEventListener('click', () => {
+            saveCurrentJellyfish();
+        });
+
+        // Theme — cycle through ocean themes
+        if (btnTheme) btnTheme.addEventListener('click', () => {
+            const newTheme = themeManager ? themeManager.cycle() : null;
+            if (themeManager) currentTheme = themeManager.getTheme();
+            if (achievements && newTheme) achievements.checkTheme(newTheme);
+            if (analytics && newTheme) analytics.logTheme(newTheme);
+            if (autoDark) autoDark.setManualOverride(true);
+            announceToScreenReader('Theme: ' + (newTheme || 'unknown'));
+            showToast('Theme: ' + (newTheme || '—'), 'info');
+        });
+
+        // Audio — toggle ambient sound, show active state
+        if (btnAudio) btnAudio.addEventListener('click', () => {
+            if (!audioEngine) return;
+            audioEngine.isPlaying ? audioEngine.stop() : audioEngine.start();
+            btnAudio.classList.toggle('active', audioEngine.isPlaying);
+            showToast(audioEngine.isPlaying ? 'Audio on' : 'Audio off', 'info');
+        });
+
+        // Settings — open the settings panel
+        if (btnSettings) btnSettings.addEventListener('click', () => {
+            if (settingsPanel) settingsPanel.open();
+        });
+
+        // Help — toggle keyboard help overlay (v6.2 new button)
+        const btnHelp = document.getElementById('btnHelp');
+        if (btnHelp) btnHelp.addEventListener('click', () => {
+            if (helpOverlay) helpOverlay.toggle();
+        });
     }
 
     // ─── Single jellyfish (v5.0 with professional animator) ───

@@ -43,8 +43,19 @@ python3 ws_server.py
 | `w` | Toggle storm mode |
 | `p` | Trigger plankton bloom |
 
-## Features (v6.0)
+## Features (v6.2)
 
+- **Fixed critical button-wiring bug** — `JellyfishAnimator._initSprings()` was
+  called before `this.personality.modes` was defined, throwing a `TypeError`
+  that crashed `init()` before button `addEventListener` lines ran. Every
+  toolbar button was dead. Now fixed: springs init after personality modes,
+  and all button wiring runs first via `setupToolbarButtons()`.
+- **New Help button** on the toolbar — opens the keyboard shortcuts overlay
+  without needing to press `?`
+- **Visual feedback toasts** on all toolbar button clicks (theme change,
+  audio toggle, variation generated, etc.)
+- **Robust init order** — button wiring is now independent of jellyfish
+  creation, so even if a subsystem fails to initialize, buttons still work
 - **Thought Bubble** — type what the jellyfish is thinking; floating text appears above
   with fade-in, gentle rise, and auto-dismiss after 3 seconds
 - **Remedy Personality Picker** — 12 homeopathic remedies (Pulsatilla, Bryonia, Arsenicum,
@@ -77,7 +88,7 @@ python3 ws_server.py
 - **17 AI image models** via Nous Research / FAL.ai (FLUX, Ideogram, Recraft, SDXL, etc.)
 - **Deluxe color selector** — HSL sliders with live preview
 - **Saved jellyfish gallery** — 3×3 grid with load/delete/preview
-- **Labeled toolbar** with keyboard shortcuts (G, V, S, t, a, s)
+- **Labeled toolbar** with keyboard shortcuts (G, V, S, t, a, s, ?)
 - **Tab visibility pause** for battery saving
 - **Toast notifications** for save/load feedback
 - **Export analytics** as JSON download

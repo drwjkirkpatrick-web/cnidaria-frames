@@ -396,7 +396,7 @@
                         <div id="analytics-container"></div>
                     </div>
                     <div class="cnidaria-settings-footer">
-                        <span class="cnidaria-version">Cnidaria v6.1</span>
+                        <span class="cnidaria-version">Cnidaria v6.2</span>
                     </div>
                 </div>
             `;

@@ -1,5 +1,10 @@
 /**
- * jellyfish-animator.js — Professional Animation Engine v5.0
+ * jellyfish-animator.js — Professional Animation Engine v5.1
+ *
+ * v5.1: Fixed init-order bug — _initSprings() was called before
+ *       this.personality.modes was defined, causing a TypeError that
+ *       crashed the entire app init and killed all button wiring.
+ *       Springs now init after personality modes are set up.
  *
  * Implements the 12 Principles of Animation for still-frame jellyfish:
  *  1. Squash & Stretch — bell compresses/expands with volume conservation
@@ -126,7 +131,10 @@
             // Principle 5: Follow Through (spring physics for tentacles)
             this.springs = [];
             this.springCount = 8;  // one per slice
-            this._initSprings();
+            // NOTE: _initSprings() is called AFTER personality.modes is defined below,
+            // because it reads personality.modes.majestic.springTension/springDamping.
+            // Previously _initSprings() was called here (before this.personality existed),
+            // causing a TypeError that crashed init() and prevented button wiring.
 
             // Principle 12: Exaggeration — Personality modes
             this.personality = {
@@ -180,12 +188,16 @@
 
             // Principle 10: Scene pacing / mood cycle
             this.pacing = {
+                enabled: true,  // v6.2: explicit default
                 mood: 'calm', // calm, curious, majestic, drifting
                 moodTimer: 0,
                 moodDuration: 15, // seconds per mood
                 moodCycle: ['calm', 'curious', 'majestic', 'drifting'],
                 moodIndex: 0,
             };
+
+            // Now that personality.modes exists, safe to init springs
+            this._initSprings();
 
             // Principle 8: Secondary Action particles
             this.particles = [];
